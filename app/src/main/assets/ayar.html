@@ -1,0 +1,640 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Türkçe TV ayarları</title>
+<style>
+  :root { --bg:#0c1218; --panel:#151f29; --panel2:#1c2935; --line:#273746; --text:#eef2f6; --dim:#93a4b5;
+    --accent:#ffd84d; --ok:#5ee08a; --warn:#ffb36b; --err:#ff7a7a; --sub:#50c8ff; --box:#ff9650; }
+  * { box-sizing:border-box; }
+  html { -webkit-text-size-adjust:100%; }
+  body { margin:0; background:var(--bg); color:var(--text); font:16px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width:760px; margin:0 auto; padding:0 16px 24px; }
+  .ust { position:sticky; top:0; z-index:5; display:flex; align-items:center; justify-content:space-between; gap:12px;
+    margin:0 -16px; padding:12px 16px; background:rgba(12,18,24,.94); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); border-bottom:1px solid var(--line); }
+  .marka { display:flex; align-items:center; gap:10px; min-width:0; }
+  .logo { flex:none; width:38px; height:38px; border-radius:10px; display:grid; place-items:center; font-weight:800; font-size:15px;
+    color:#1a1400; background:linear-gradient(135deg, #ffe680, var(--accent) 55%, #f0b400); }
+  h1 { font-size:19px; margin:0; line-height:1.1; }
+  .alt { font-size:12px; color:var(--dim); }
+  #durum { flex:0 1 auto; max-width:55%; font-size:13px; color:var(--dim); padding:5px 10px; border-radius:999px; background:var(--panel2);
+    border:1px solid var(--line); text-align:right; overflow-wrap:anywhere; }
+  #durum.hata { color:var(--err); border-color:rgba(255,122,122,.5); }
+  .kart { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px; margin:14px 0; }
+  .kart.aktif { border-color:var(--accent); }
+  h2 { display:flex; align-items:center; gap:10px; font-size:17px; margin:0 0 12px; }
+  h2 .ikon { flex:none; width:30px; height:30px; border-radius:9px; display:grid; place-items:center; font-size:15px; background:var(--panel2); }
+  .kart > b { display:block; }
+  .kart a { color:var(--sub); word-break:break-all; }
+  summary { cursor:pointer; }
+  .satir { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:10px 0; }
+  .satir label { flex:1 1 140px; color:var(--dim); font-size:14px; }
+  button, select, input[type=text], input[type=url], .dugme { font:inherit; color:var(--text); background:var(--panel2); border:1px solid var(--line);
+    border-radius:10px; padding:10px 14px; min-height:44px; }
+  button, .dugme { cursor:pointer; font-weight:600; }
+  button:active, .dugme:active { filter:brightness(1.25); }
+  button:disabled { opacity:.4; cursor:default; }
+  .ana { background:var(--accent); border-color:var(--accent); color:#1a1400; }
+  .tehlike { color:var(--err); border-color:rgba(255,122,122,.45); background:transparent; }
+  .dugme { display:inline-flex; align-items:center; text-decoration:none; }
+  .kart a.dugme.ana { color:#1a1400; word-break:normal; }
+  input[type=text], input[type=url] { flex:1 1 160px; min-width:0; }
+  input:focus, select:focus, button:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
+  input[type=range] { flex:2 1 160px; accent-color:var(--accent); }
+  input[type=color] { width:56px; height:40px; border:1px solid var(--line); border-radius:10px; background:none; padding:2px; }
+  input[type=checkbox] { flex:none; width:22px; height:22px; accent-color:var(--accent); margin:0 8px 0 0; }
+  .satir label.secenek { display:flex; align-items:flex-start; color:var(--text); font-size:15px; }
+  output { min-width:44px; text-align:right; color:var(--dim); }
+  .not { color:var(--dim); font-size:13.5px; margin:6px 0; }
+  .buyuk { font-size:18px; font-weight:700; }
+  #ceviriDurum { padding:12px 14px; border-radius:10px; background:var(--panel2); }
+  .dugmeler button { flex:1 1 90px; }
+  #sahne { position:relative; width:100%; aspect-ratio:16/9; background:#1c222a center/100% 100% no-repeat; border:1px solid var(--line); border-radius:10px; touch-action:none; overflow:hidden; user-select:none; }
+  .alan { position:absolute; border:2px solid var(--sub); background:rgba(80,200,255,.12); }
+  .alan.kutu { border-color:var(--box); background:rgba(255,150,80,.12); }
+  .alan.secili { border:3px solid var(--accent); z-index:2; }
+  .alan span { position:absolute; left:2px; top:0; font-size:11px; background:rgba(0,0,0,.6); padding:0 4px; white-space:nowrap; pointer-events:none; }
+  .tutamak { position:absolute; right:-12px; bottom:-12px; width:24px; height:24px; border-radius:50%; background:var(--accent); display:none; }
+  .alan.secili .tutamak { display:block; }
+  .alan.turkce { border:2px dashed #6ee07a; background:rgba(110,224,122,.15); }
+  .alan.turkce .tutamak { display:block; background:#6ee07a; }
+  .renkler { display:flex; flex-wrap:wrap; gap:6px 14px; font-size:12.5px; color:var(--dim); margin:8px 0; }
+  .renkler i { display:inline-block; width:12px; height:12px; border-radius:3px; margin-right:5px; vertical-align:-1px; }
+  #ornek { margin:14px 0 0; padding:22px 12px; border-radius:10px; background:linear-gradient(160deg, #3c4f3c, #24302a); text-align:center; }
+  #ornek span { display:inline-block; padding:10px 24px; border-radius:6px; }
+  #ps5Ozet { display:flex; flex-wrap:wrap; align-items:center; gap:10px; padding:12px 14px; border-radius:10px; background:var(--panel2); border-left:4px solid var(--warn); }
+  #ps5Ozet.ok { border-left-color:var(--ok); }
+  #sihirbaz { margin-top:12px; }
+  #sihirbaz > summary { font-weight:700; padding:10px 0; }
+  .adimlar { list-style:none; counter-reset:adim; padding:0; margin:12px 0 0; }
+  .adimlar > li { counter-increment:adim; position:relative; padding:0 0 22px 46px; }
+  .adimlar > li::before { content:counter(adim); position:absolute; left:0; top:0; width:32px; height:32px; border-radius:50%; display:grid; place-items:center;
+    font-weight:800; background:var(--panel2); border:2px solid var(--line); }
+  .adimlar > li:not(:last-child)::after { content:""; position:absolute; left:15px; top:38px; bottom:4px; width:2px; background:var(--line); }
+  .adimlar > li.tamam::before { content:"✓"; background:var(--ok); border-color:var(--ok); color:#0c1218; }
+  .adimlar > li > b { display:block; font-size:16.5px; margin:4px 0 6px; }
+  .bilgi { margin:8px 0; padding:10px 12px; border-radius:10px; background:rgba(255,216,77,.08); border:1px solid rgba(255,216,77,.35); font-size:14px; }
+  .bilgi b { color:var(--accent); }
+  .yol { display:block; margin:6px 0; padding:8px 10px; border-radius:8px; background:var(--panel2); font-size:13.5px; }
+  .ic { margin:8px 0 0; }
+  .ic > summary { color:var(--dim); font-size:13.5px; padding:6px 0; }
+  .guvenlik { list-style:none; padding:0; margin:0; }
+  .guvenlik li { margin:8px 0; font-size:14px; }
+  .uyari { color:var(--warn); }
+  .etiket { display:inline-block; font-size:12px; padding:1px 6px; border-radius:4px; background:#2b5a35; margin-right:6px; }
+  .tesekkur { margin:4px 0; font-style:italic; }
+  .kart a.bagis { display:inline-block; padding:6px 12px; border-radius:8px; background:#7a4b12; color:#fff; text-decoration:none; margin-right:10px; word-break:normal; }
+  .dosya { display:flex; gap:8px; align-items:center; justify-content:space-between; padding:8px 0; border-top:1px solid var(--line); font-size:14px; word-break:break-all; }
+  .kart .kart { background:var(--panel2); }
+  footer { text-align:center; color:var(--dim); font-size:13px; padding:18px 0 28px; letter-spacing:.02em; }
+  footer b { color:var(--text); font-weight:600; }
+</style>
+</head>
+<body>
+<main>
+  <header class="ust">
+    <div class="marka"><span class="logo">TR</span><div><h1>Türkçe TV</h1><div class="alt">Oyun, film ve dizi altyazısı Türkçe</div></div></div>
+    <div id="durum">Yükleniyor…</div>
+  </header>
+
+  <section class="kart">
+    <h2><span class="ikon">▶</span>Çeviri</h2>
+    <div id="ceviriDurum" class="buyuk">…</div>
+    <p class="not">PlayStation ekranındaki altyazıyı okur, Türkçesini TV'de gösterir: oyunlarda ve PlayStation'da izlediğin film ve dizilerde.</p>
+    <div class="satir dugmeler">
+      <button id="baslat" class="ana">Başlat</button>
+      <button id="duraklat">Duraklat</button>
+      <button id="durdur">Durdur</button>
+    </div>
+    <div class="satir"><label class="secenek"><input id="skipIntro" type="checkbox">Oyun açılışındaki yapımcı, telif ve uyarı yazılarını çevirme</label></div>
+    <p class="not">Açılış yazıları yine de çevrilirse "Duraklat"a bas, oyun başlayınca "Devam"a bas. Duraklatınca TV'deki yazılar hemen silinir.</p>
+  </section>
+
+  <section class="kart">
+    <h2><span class="ikon">🎮</span>PlayStation bağlantısı</h2>
+    <div id="ps5Ozet">…</div>
+    <details id="sihirbaz">
+      <summary>PlayStation ile eşleştir (bir kerelik, yaklaşık 5 dakika)</summary>
+      <ol class="adimlar">
+        <li id="adim1"><b>PlayStation'da Uzaktan Oynatma'yı aç</b>
+          <span class="yol">PS5: Ayarlar → Sistem → Uzaktan Oynatma → Uzaktan Oynatmayı Etkinleştir</span>
+          <div class="not">İngilizce menüde: Settings → System → Remote Play → Enable Remote Play.</div>
+          <details class="ic"><summary>PlayStation'ı TV'den uyandırmak istersen</summary>
+            <span class="yol">PS5: Ayarlar → Sistem → Güç Tasarrufu → Dinlenme Modunda Kullanılabilen Özellikler → "İnternete Bağlı Kal" ve "Ağ Üzerinden PS5'i Açmayı Etkinleştir"</span>
+          </details>
+          <div class="not">Menü yolları PS5 içindir; dile göre adlar biraz farklı olabilir. PlayStation ve TV aynı modeme bağlı olmalı.</div></li>
+        <li id="adim2"><b>Yansıtma için PSN hesabı bağla</b>
+          <div class="bilgi"><b>Yeni bir PSN hesabı aç</b> ve PlayStation'a kullanıcı olarak ekle. Bu hesap <b>yalnız PlayStation ekranını TV'ye yansıtmak</b> için kullanılır: oyun oynamaz, satın alma yapmaz. Asıl hesabın bu uygulamaya hiç bağlanmaz.</div>
+          <div class="not">Düğme Sony'nin kendi giriş sayfasını açar. Yeni hesabınla gir; şifreni yalnız orada yaz, bu sayfa ve TV şifreni hiç görmez.</div>
+          <div class="satir"><a id="psnGiris" class="dugme ana" target="_blank" rel="noopener noreferrer" href="#">Sony'de giriş yap ↗</a></div>
+          <div class="not">Girişten sonra boş ya da hata yazan bir sayfa açılır; bu normal. O sayfanın <b>adres çubuğundaki adresi</b> kopyala (içinde "code=" geçer), aşağıya yapıştır. Kod birkaç dakika geçerli.</div>
+          <div class="satir"><input id="psnAdres" type="text" maxlength="2000" placeholder="https://remoteplay.dl.playstation.net/...?code=..." autocomplete="off"><button id="psnBagla" class="ana">Hesabı bağla</button></div>
+          <details class="ic"><summary>Hesap kimliğimi biliyorum</summary>
+            <div class="satir"><input id="psnKimlik" type="text" maxlength="20" placeholder="ör. AbCdEfGhIjk=" autocomplete="off"><button id="kimlikKaydet">Kaydet</button></div>
+          </details></li>
+        <li id="adim3"><b>PlayStation'ı bul</b>
+          <div class="not">PlayStation açık olsun. Bulunamazsa PlayStation'da Ayarlar → Ağ → Bağlantı Durumu'ndaki IP adresini yaz.</div>
+          <div class="satir"><button id="ps5Bul">PlayStation'ı ara</button><input id="ps5Ip" type="text" inputmode="decimal" maxlength="15" placeholder="192.168.1.x"></div>
+          <div id="bulunan"></div></li>
+        <li id="adim4"><b>PlayStation'ın verdiği kodu yaz</b>
+          <div class="not">PlayStation'da <b>yeni açtığın kullanıcıyla</b> girmişken:</div>
+          <span class="yol">PS5: Ayarlar → Sistem → Uzaktan Oynatma → Cihaz Bağla</span>
+          <div class="not">Ekranda 8 haneli kod çıkar; kod birkaç dakika geçerli.</div>
+          <div class="satir"><input id="ps5Pin" type="text" inputmode="numeric" maxlength="9" placeholder="12345678" autocomplete="off"><button id="eslestir" class="ana">Eşleştir</button></div></li>
+        <li id="adim5"><b>Hazır</b>
+          <div class="not">Yukarıdaki "Başlat" ile çeviriyi aç. Oyuna ya da filme asıl hesabınla, TV'nin PlayStation girişinden devam et.</div></li>
+      </ol>
+    </details>
+  </section>
+
+  <section class="kart">
+    <h2><span class="ikon">▭</span>Çeviri alanları</h2>
+    <div id="sahne"></div>
+    <div class="renkler"><span><i style="background:var(--sub)"></i>Okunan altyazı</span><span><i style="background:var(--box)"></i>Bilgi kutusu</span><span><i style="background:#6ee07a"></i>Türkçe yazının yeri</span></div>
+    <p class="not">Alanı sürükleyerek taşı, sarı noktadan çekerek boyutlandır.</p>
+    <div class="satir"><label class="secenek"><input id="turkceYer" type="checkbox">Türkçe altyazının yerini kendim seçeceğim</label></div>
+    <p class="not">İşaretlemezsen Türkçe yazı oyunun altyazısının biraz altına çıkar. İşaretlersen yeşil kutuyu istediğin yere sürükle; yazı kutunun alt kenarına oturur ve TV'de hemen örnek bir satır görünür.</p>
+    <div class="satir">
+      <select id="secim"></select>
+      <button id="yeni">Yeni alan</button>
+      <button id="sil">Sil</button>
+    </div>
+    <div class="satir">
+      <input id="ad" type="text" maxlength="30" placeholder="Alan adı">
+      <select id="tur"><option value="altyazi">Altyazı</option><option value="kutu">Bilgi kutusu</option></select>
+    </div>
+    <div class="satir">
+      <button id="varsayilan">Varsayılana döndür</button>
+      <button id="yenile">Görüntüyü yenile</button>
+    </div>
+  </section>
+
+  <section class="kart">
+    <h2><span class="ikon">Aa</span>Görünüm</h2>
+    <div class="satir"><label for="font">Yazı tipi</label>
+      <select id="font"><option value="kalin">Kalın</option><option value="sans">Düz</option><option value="serif">Tırnaklı</option><option value="mono">Daktilo</option></select></div>
+    <div class="satir"><label for="subtitleSize">Altyazı boyutu</label><input id="subtitleSize" type="range" min="8" max="48"><output id="subtitleSizeO"></output></div>
+    <div class="satir"><label for="boxSize">Kutu yazı boyutu</label><input id="boxSize" type="range" min="8" max="48"><output id="boxSizeO"></output></div>
+    <div class="satir"><label for="textColor">Yazı rengi</label><input id="textColor" type="color"></div>
+    <div class="satir"><label for="boxColor">Kutu rengi</label><input id="boxColor" type="color"></div>
+    <div class="satir"><label for="opacity">Kutu opaklığı</label><input id="opacity" type="range" min="0" max="100" step="5"><output id="opacityO"></output></div>
+    <div id="ornek"><span id="ornekYazi">Bu gece kasabaya gidiyoruz, hazır ol.</span></div>
+    <p class="not">Değişiklikler kendiliğinden kaydedilir ve TV'de hemen görünür.</p>
+  </section>
+
+  <section class="kart">
+    <h2><span class="ikon">📦</span>Oyun paketi</h2>
+    <p class="not">Bir Türkçe yamanın çevirisini TV'ye yükle: ekranda okunan satır pakette varsa çevirmenin cümlesi gösterilir, yoksa makine çevirisi.</p>
+    <div id="paketler"></div>
+    <div class="satir">
+      <input id="oyunAra" type="text" maxlength="80" placeholder="Oyun adı, ör. Red Dead Redemption 2" enterkeyhint="search">
+      <button id="ara" class="ana">Ara</button>
+    </div>
+    <div id="sonuclar"></div>
+    <details class="ic">
+      <summary>Telefondaki dosyayı TV'ye yükle</summary>
+      <p class="not">Yamayı çevirmenin kendi sitesinden indirdiysen buradan TV'ye gönder. Çevirmenin adını ve varsa bağış sayfasını yaz ki pakette görünsün. TV .po, .tsv, .csv, .txt, .rpy ve .zip okur.</p>
+      <div class="satir"><input id="yukDosya" type="file" accept=".po,.tsv,.csv,.txt,.rpy,.zip"></div>
+      <div class="satir"><input id="yukOyun" type="text" maxlength="60" placeholder="Oyun adı"></div>
+      <div class="satir"><input id="yukCevirmen" type="text" maxlength="80" placeholder="Çeviren grup veya kişi"></div>
+      <div class="satir"><input id="yukKaynak" type="text" maxlength="300" placeholder="İndirdiğin sayfanın adresi"></div>
+      <div class="satir"><input id="yukBagis" type="url" maxlength="300" placeholder="Bağış / destek sayfası (varsa)"></div>
+      <div class="satir"><button id="yukle" class="ana">TV'ye yükle</button></div>
+    </details>
+  </section>
+
+  <section class="kart">
+    <h2><span class="ikon">🔒</span>Güvenlik</h2>
+    <ul class="guvenlik" id="guvenlik"></ul>
+    <div class="satir"><button id="unut" class="tehlike">PSN hesabını ve PlayStation eşleşmesini TV'den sil</button></div>
+    <p class="not">Bir şeyden şüphelenirsen: bu düğmeye bas, PlayStation'da Uzaktan Oynatma → Bağlı Cihazlar'dan TV'yi kaldır ve yansıtma hesabının şifresini değiştir.</p>
+  </section>
+
+  <footer>Türkçe TV · by <b>Cihan Sezgin</b><br><a id="hakkinda" href="#" style="color:var(--sub)">Hakkında ve lisanslar</a></footer>
+</main>
+<script>
+"use strict";
+const W = 1920, H = 1080, MIN_W = 40, MIN_H = 20, MAX_AREAS = 6;
+const DEFAULT_AREAS = [
+  { name: "Altyazı", kind: "altyazi", left: 192, top: 777, right: 1728, bottom: 1079 },
+  { name: "Görev kutusu", kind: "kutu", left: 0, top: 0, right: 960, bottom: 389 },
+  { name: "Üst bölge", kind: "kutu", left: 0, top: 0, right: 1920, bottom: 777 },
+];
+const FONTS = { kalin: "bold 1em sans-serif", sans: "1em sans-serif", serif: "1em serif", mono: "1em monospace" };
+const token = new URLSearchParams(location.search).get("t") || "";
+const $ = (id) => document.getElementById(id);
+let settings = null, selected = 0, saveTimer = null, stopped = false;
+
+function api(path) { return path + (path.includes("?") ? "&" : "?") + "t=" + encodeURIComponent(token); }
+$("hakkinda").href = api("/hakkinda");
+
+function status(text, error) { const d = $("durum"); d.textContent = text; d.className = error ? "hata" : ""; }
+
+function expired() {
+  stopped = true;
+  status("Bağlantı süresi doldu. TV'deki QR kodu yeniden okut.", true);
+  document.querySelectorAll("button, select, input").forEach((e) => (e.disabled = true));
+}
+
+async function load() {
+  try {
+    const r = await fetch(api("/api/ayar"), { cache: "no-store" });
+    if (r.status === 403) return expired();
+    if (!r.ok) throw new Error(r.status);
+    settings = await r.json();
+    status("Bağlı");
+    render();
+  } catch (e) { status("TV'ye ulaşılamadı. Telefon ve TV aynı ağda mı?", true); }
+}
+
+function scheduleSave() {
+  if (stopped) return;
+  clearTimeout(saveTimer);
+  status("Kaydediliyor…");
+  saveTimer = setTimeout(save, 400);
+}
+
+async function save() {
+  try {
+    const r = await fetch(api("/api/ayar"), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(settings) });
+    if (r.status === 403) return expired();
+    if (!r.ok) throw new Error(r.status);
+    const clean = await r.json();
+    if (!dragging && document.activeElement !== $("ad")) { settings = clean; render(); }
+    status("Kaydedildi");
+  } catch (e) { status("Kaydedilemedi, tekrar dene.", true); }
+}
+
+function refreshPicture() {
+  if (stopped) return;
+  const img = new Image();
+  img.onload = () => { $("sahne").style.backgroundImage = "url(" + img.src + ")"; };
+  img.src = api("/api/kare.jpg?n=" + Date.now());
+}
+
+function render() {
+  const areas = settings.regions;
+  selected = Math.min(Math.max(selected, 0), areas.length - 1);
+  const scene = $("sahne");
+  scene.querySelectorAll(".alan").forEach((e) => e.remove());
+  areas.forEach((a, i) => {
+    const el = document.createElement("div");
+    el.className = "alan" + (a.kind === "kutu" ? " kutu" : "") + (i === selected ? " secili" : "");
+    el.dataset.index = i;
+    place(el, a);
+    const label = document.createElement("span");
+    label.textContent = (i + 1) + ". " + a.name;
+    const handle = document.createElement("div");
+    handle.className = "tutamak";
+    el.append(label, handle);
+    scene.append(el);
+  });
+  $("secim").innerHTML = "";
+  areas.forEach((a, i) => $("secim").add(new Option((i + 1) + ". " + a.name, i, false, i === selected)));
+  $("ad").value = areas[selected].name;
+  $("tur").value = areas[selected].kind;
+  $("yeni").disabled = areas.length >= MAX_AREAS;
+  $("sil").disabled = areas.length <= 1;
+  $("font").value = settings.font;
+  for (const k of ["subtitleSize", "boxSize", "opacity"]) { $(k).value = settings[k]; }
+  $("turkceYer").checked = !!settings.turkish;
+  $("skipIntro").checked = settings.skipIntro !== false;
+  if (settings.turkish) {
+    const t = el("div", { className: "alan turkce" }, el("span", { textContent: "Türkçe altyazı" }), el("div", { className: "tutamak" }));
+    t.dataset.index = "tr";
+    place(t, settings.turkish);
+    scene.append(t);
+  }
+  $("textColor").value = settings.textColor.toLowerCase();
+  $("boxColor").value = settings.boxColor.toLowerCase();
+  sample();
+}
+
+function place(el, a) {
+  el.style.left = (a.left / W * 100) + "%";
+  el.style.top = (a.top / H * 100) + "%";
+  el.style.width = ((a.right - a.left) / W * 100) + "%";
+  el.style.height = ((a.bottom - a.top) / H * 100) + "%";
+}
+
+function sample() {
+  const s = settings, span = $("ornekYazi");
+  span.style.font = FONTS[s.font] || FONTS.kalin;
+  span.style.fontSize = s.subtitleSize + "px";
+  span.style.color = s.textColor;
+  const c = parseInt(s.boxColor.slice(1), 16);
+  span.style.background = "rgba(" + (c >> 16 & 255) + "," + (c >> 8 & 255) + "," + (c & 255) + "," + (s.opacity / 100) + ")";
+  $("subtitleSizeO").textContent = s.subtitleSize;
+  $("boxSizeO").textContent = s.boxSize;
+  $("opacityO").textContent = "%" + s.opacity;
+}
+
+function areaOf(i) { return i === "tr" ? settings.turkish : settings.regions[i]; }
+
+// Dragging: move the area, or resize it from the yellow handle. Coordinates are in game-picture pixels.
+let dragging = null;
+$("sahne").addEventListener("pointerdown", (e) => {
+  const box = e.target.closest(".alan");
+  if (!box || stopped) return;
+  const i = box.dataset.index === "tr" ? "tr" : +box.dataset.index;
+  if (i !== "tr" && i !== selected) { selected = i; render(); }
+  const scene = $("sahne").getBoundingClientRect();
+  dragging = { i, resize: e.target.classList.contains("tutamak"), x: e.clientX, y: e.clientY,
+    sx: W / scene.width, sy: H / scene.height, start: { ...areaOf(i) } };
+  $("sahne").setPointerCapture(e.pointerId);
+  e.preventDefault();
+});
+$("sahne").addEventListener("pointermove", (e) => {
+  if (!dragging) return;
+  const d = dragging, s = d.start, a = areaOf(d.i);
+  const dx = Math.round((e.clientX - d.x) * d.sx), dy = Math.round((e.clientY - d.y) * d.sy);
+  if (d.resize) {
+    a.right = Math.min(Math.max(s.right + dx, s.left + MIN_W), W);
+    a.bottom = Math.min(Math.max(s.bottom + dy, s.top + MIN_H), H);
+  } else {
+    const mx = Math.min(Math.max(dx, -s.left), W - s.right), my = Math.min(Math.max(dy, -s.top), H - s.bottom);
+    a.left = s.left + mx; a.right = s.right + mx; a.top = s.top + my; a.bottom = s.bottom + my;
+  }
+  place($("sahne").querySelector('.alan[data-index="' + d.i + '"]'), a);
+});
+function endDrag() { if (dragging) { dragging = null; scheduleSave(); } }
+$("sahne").addEventListener("pointerup", endDrag);
+$("sahne").addEventListener("pointercancel", endDrag);
+
+$("secim").addEventListener("change", (e) => { selected = +e.target.value; render(); });
+$("ad").addEventListener("input", (e) => {
+  settings.regions[selected].name = e.target.value;
+  $("sahne").querySelector(".alan.secili span").textContent = (selected + 1) + ". " + e.target.value;
+  $("secim").options[selected].text = (selected + 1) + ". " + e.target.value;
+  scheduleSave();
+});
+$("tur").addEventListener("change", (e) => { settings.regions[selected].kind = e.target.value; render(); scheduleSave(); });
+$("yeni").addEventListener("click", () => {
+  if (settings.regions.length >= MAX_AREAS) return;
+  settings.regions.push({ name: "Alan " + (settings.regions.length + 1), kind: "altyazi", left: 660, top: 440, right: 1260, bottom: 640 });
+  selected = settings.regions.length - 1;
+  render(); scheduleSave();
+});
+$("sil").addEventListener("click", () => {
+  if (settings.regions.length <= 1 || !confirm("\"" + settings.regions[selected].name + "\" silinsin mi?")) return;
+  settings.regions.splice(selected, 1);
+  render(); scheduleSave();
+});
+$("varsayilan").addEventListener("click", () => {
+  if (!confirm("Bütün alanlar varsayılana dönsün mü?")) return;
+  settings.regions = DEFAULT_AREAS.map((a) => ({ ...a }));
+  selected = 0;
+  render(); scheduleSave();
+});
+$("yenile").addEventListener("click", refreshPicture);
+$("turkceYer").addEventListener("change", (e) => {
+  settings.turkish = e.target.checked ? { left: 192, top: 880, right: 1728, bottom: 1050 } : null;
+  render(); scheduleSave();
+});
+$("skipIntro").addEventListener("change", (e) => { settings.skipIntro = e.target.checked; scheduleSave(); });
+$("font").addEventListener("change", (e) => { settings.font = e.target.value; sample(); scheduleSave(); });
+for (const k of ["subtitleSize", "boxSize", "opacity"]) {
+  $(k).addEventListener("input", (e) => { settings[k] = +e.target.value; sample(); scheduleSave(); });
+}
+for (const k of ["textColor", "boxColor"]) {
+  $(k).addEventListener("input", (e) => { settings[k] = e.target.value.toUpperCase(); sample(); scheduleSave(); });
+}
+
+// ---- Game packs. Everything from GitHub is put on the page as text, never as HTML.
+function el(tag, props, ...children) {
+  const e = document.createElement(tag);
+  Object.assign(e, props || {});
+  children.forEach((c) => c != null && e.append(c));
+  return e;
+}
+
+async function call(path, options) {
+  if (stopped) throw new Error("");
+  const r = await fetch(api(path), Object.assign({ cache: "no-store" }, options || {}))
+    .catch(() => { throw new Error("TV'ye ulaşılamadı. Televizyonda Türkçe TV uygulamasını açıp tekrar deneyin."); });
+  if (r.status === 403) { expired(); throw new Error(""); }
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok || (data.error && !data.results)) throw new Error(data.error || "TV yanıt vermedi.");
+  return data;
+}
+
+function postJson(path, body) {
+  return call(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+}
+
+async function packAction(work, busyText, doneText) {
+  status(busyText);
+  try { renderPacks(await work()); status(doneText); $("paketler").scrollIntoView({ behavior: "smooth", block: "start" }); }
+  catch (e) { if (e.message) status(e.message, true); }
+}
+
+function credit(p) {
+  const parts = [p.lines.toLocaleString("tr-TR") + " satır"];
+  if (p.license) parts.push("Lisans: " + p.license);
+  return parts.join(" · ");
+}
+
+function thanks(p) {
+  const who = p.credit || "çevirmenler";
+  return "Bu Türkçe çeviri " + who + " emeğidir. Teşekkürler " + who + "!";
+}
+
+function renderPacks(data) {
+  const box = $("paketler");
+  box.innerHTML = "";
+  if (!data.packs.length) { box.append(el("p", { className: "not", textContent: "TV'de henüz oyun paketi yok." })); return; }
+  data.packs.forEach((p) => {
+    const on = p.id === data.active;
+    const card = el("div", { className: "kart" + (on ? " aktif" : "") },
+      el("b", { textContent: p.game + (on ? " — kullanılıyor" : "") }),
+      el("div", { className: "tesekkur", textContent: thanks(p) }),
+      el("div", { className: "not", textContent: credit(p) }),
+      el("div", { className: "satir" },
+        p.donate ? el("a", { className: "bagis", href: p.donate, target: "_blank", rel: "noopener", textContent: "Destek ol / bağış yap" }) : null,
+        p.source ? el("a", { href: p.source, target: "_blank", rel: "noopener", textContent: "Çevirinin sayfası" }) : null));
+    const row = el("div", { className: "satir" });
+    row.append(on
+      ? el("button", { textContent: "Paketi kapat", onclick: () => packAction(() => postJson("/api/paket/sec", { id: "" }), "Kapatılıyor…", "Paket kapatıldı") })
+      : el("button", { textContent: "Bu paketi kullan", onclick: () => packAction(() => postJson("/api/paket/sec", { id: p.id }), "Seçiliyor…", p.game + " paketi kullanılıyor") }));
+    row.append(el("button", { textContent: "Sil", onclick: () => {
+      if (confirm(p.game + " paketi silinsin mi?")) packAction(() => postJson("/api/paket/sil", { id: p.id }), "Siliniyor…", "Silindi");
+    } }));
+    card.append(row);
+    box.append(card);
+  });
+}
+
+async function search() {
+  const game = $("oyunAra").value.trim();
+  if (game.length < 2) return status("Oyun adını yaz.", true);
+  const out = $("sonuclar");
+  out.innerHTML = "";
+  status("Aranıyor, bulunan yamaların dosyaları kontrol ediliyor…");
+  try {
+    const data = await call("/api/paket/ara?q=" + encodeURIComponent(game));
+    if (data.error) status(data.error, true); else status(data.results.length ? data.results.length + " kullanılabilir yama" : "TV'nin okuyabildiği biçimde Türkçe yama bulunamadı; aşağıdaki bağlantılara bak.");
+    data.results.forEach((r) => out.append(resultCard(r, game)));
+    const links = el("div", { className: "kart" }, el("b", { textContent: "Başka yerlerde ara" }),
+      el("div", { className: "not", textContent: "Bu sayfalar telefonda açılır. İndirdiğin dosyayı aşağıdaki \"Telefondaki dosyayı yükle\" bölümünden TV'ye gönder." }));
+    data.links.forEach((l) => links.append(el("div", {}, el("a", { href: l.url, target: "_blank", rel: "noopener", textContent: l.label }))));
+    out.append(links);
+  } catch (e) { if (e.message) status(e.message, true); }
+}
+
+function resultCard(r, game) {
+  const card = el("div", { className: "kart" },
+    el("a", { href: r.url, target: "_blank", rel: "noopener", textContent: r.repo }),
+    r.description ? el("div", { textContent: r.description }) : null,
+    el("div", { className: "not" },
+      el("span", { className: "etiket", textContent: "Çeviren: " + r.repo.split("/")[0] }),
+      "★ " + r.stars + " · son güncelleme " + r.updated + (r.open ? " · lisans " + r.license : "")));
+  const files = el("div");
+  const look = el("button", { textContent: "Çeviri dosyalarını göster", onclick: async () => {
+    look.disabled = true;
+    status("Depoya bakılıyor…");
+    try {
+      const data = await call("/api/paket/dosyalar?repo=" + encodeURIComponent(r.repo));
+      files.innerHTML = "";
+      if (!data.files.length) files.append(el("div", { className: "not", textContent: "TV'nin okuyabileceği çeviri dosyası yok (.po, .tsv, .csv, .txt, .rpy, .zip). Bu yama oyunun kendi biçiminde olabilir." }));
+      data.files.forEach((f) => files.append(el("div", { className: "dosya" },
+        el("span", { textContent: (f.path.startsWith("release/") ? "Yayın " + f.path.split("/")[1] + ": " + f.path.split("/").slice(2).join("/") : f.path) +
+          (f.size > 0 ? " (" + Math.ceil(f.size / 1024) + " KB)" : "") }),
+        el("button", { textContent: "TV'ye indir", onclick: () => packAction(
+          () => postJson("/api/paket/indir", { repo: r.repo, path: f.path, game: game }),
+          "İndiriliyor, büyük dosyada biraz sürer…", "Paket yüklendi ve seçildi") }))));
+      status("Bir dosya seç");
+    } catch (e) { if (e.message) status(e.message, true); }
+    look.disabled = false;
+  } });
+  card.append(el("div", { className: "satir" }, look), files);
+  return card;
+}
+
+$("ara").addEventListener("click", search);
+$("oyunAra").addEventListener("keydown", (e) => { if (e.key === "Enter") search(); });
+$("yukle").addEventListener("click", () => {
+  const file = $("yukDosya").files[0];
+  if (!file) return status("Önce dosya seç.", true);
+  if (file.size > 30 * 1024 * 1024) return status("Dosya 30 MB'tan büyük.", true);
+  const q = "?dosya=" + encodeURIComponent(file.name) + "&oyun=" + encodeURIComponent($("yukOyun").value.trim()) +
+    "&cevirmen=" + encodeURIComponent($("yukCevirmen").value.trim()) + "&kaynak=" + encodeURIComponent($("yukKaynak").value.trim()) + "&bagis=" + encodeURIComponent($("yukBagis").value.trim());
+  packAction(() => call("/api/paket/yukle" + q, { method: "POST", body: file }), "Gönderiliyor…", "Paket yüklendi ve seçildi");
+});
+
+// ---- Translation switch and PlayStation pairing. The page only ever learns whether a key exists, never the key.
+let state = null, busy = false;
+
+function isHome(ip) {
+  const n = (ip || "").split(".").map(Number);
+  return n.length === 4 && (n[0] === 10 || (n[0] === 172 && n[1] >= 16 && n[1] <= 31) || (n[0] === 192 && n[1] === 168));
+}
+
+function renderState(s) {
+  state = s;
+  const p = s.ps5;
+  $("ceviriDurum").textContent = (s.calisiyor ? "● " : "○ ") + (s.calisiyor && s.deneme ? "Deneme modu · " : "") + s.not;
+  if (s.izin === false) $("ceviriDurum").textContent = "○ Önce TV'de izin ver: TV ekranındaki «İzni ver» düğmesine bas.";
+  $("baslat").disabled = busy || s.calisiyor;
+  $("durdur").disabled = busy || !s.calisiyor;
+  $("duraklat").disabled = busy || !s.calisiyor;
+  $("duraklat").textContent = s.duraklatildi ? "Devam" : "Duraklat";
+  if (s.girisAdresi) $("psnGiris").href = s.girisAdresi;
+  $("ps5Ozet").className = p.eslesti ? "ok" : "";
+  $("ps5Ozet").textContent = p.eslesti ? "✓ PlayStation eşleşmiş (" + p.adres + ")." : p.hesap ? "Yansıtma hesabı bağlı, PlayStation henüz eşleşmedi." : "PlayStation eşleşmemiş. Aşağıdaki adımları bir kez yap.";
+  if (p.eslesti) $("ps5Ozet").append(" ", el("button", { textContent: "PlayStation'ı uyandır", disabled: busy, onclick: () =>
+    control("/api/ps5/uyandir", {}, "Uyandırma gönderiliyor…", "Uyandırma gönderildi; PlayStation birkaç saniyede açılır.") }));
+  $("adim2").classList.toggle("tamam", p.hesap);
+  $("adim4").classList.toggle("tamam", p.eslesti);
+  $("adim5").classList.toggle("tamam", p.eslesti);
+  if (!p.eslesti && !$("sihirbaz").dataset.acildi) { $("sihirbaz").open = true; $("sihirbaz").dataset.acildi = "1"; }
+  $("unut").disabled = busy || s.calisiyor || (!p.hesap && !p.eslesti);
+  const ok = "✅ ", warn = "⚠️ ", home = isHome(location.hostname);
+  const items = [
+    [ok, "Yansıtma için ayrı bir PSN hesabı kullanılır; asıl hesabın bu uygulamaya hiç bağlanmaz."],
+    [ok, "PSN şifren yalnız Sony'nin kendi sayfasına yazılır. Bu sayfa ve TV şifreni hiç görmez, saklamaz."],
+    [ok, "Sony'nin verdiği giriş anahtarı bir kez kullanılıp atılır. TV yalnız hesap numaranı ve PlayStation'ın verdiği eşleşme anahtarlarını saklar."],
+    [ok, "Anahtarlar TV'de uygulamanın kapalı klasöründedir: başka uygulama okuyamaz, bu sayfada gösterilmez, internete gönderilmez."],
+    [ok, "TV eşleşme bilgisini yalnız ev ağındaki PlayStation'a gönderir."],
+    [home ? ok : warn, home ? "Bu sayfa ev ağı adresinden açıldı." : "Bu sayfa ev ağı dışından açılmış görünüyor; kapat."],
+    p.adres ? (isHome(p.adres) ? [ok, "Eşleşmiş PlayStation ev ağında."] : [warn, "Eşleşmiş PlayStation adresi ev ağına ait değil; eşleşmeyi sil."]) : [ok, "Henüz eşleşmiş PlayStation yok."],
+    [ok, "Sayfa yalnız QR koddaki gizli anahtarla açılır; çeviri kapalıyken 15 dakika kullanılmazsa kendiliğinden kapanır."],
+    [warn, "Bağlantı şifresiz (http). Bu sayfayı yalnız kendi ev Wi-Fi'ında aç; QR kodun fotoğrafını kimseyle paylaşma."],
+  ];
+  $("guvenlik").innerHTML = "";
+  items.forEach(([mark, text]) => $("guvenlik").append(el("li", { className: mark === warn ? "uyari" : "", textContent: mark + text })));
+}
+
+async function refreshState() {
+  if (stopped || busy) return;
+  try { const s = await call("/api/durum"); if (!busy) renderState(s); } catch (e) {}
+}
+
+async function control(path, body, busyText, doneText) {
+  if (busy) return false;
+  busy = true;
+  if (state) renderState(state);
+  status(busyText);
+  try {
+    const s = await postJson(path, body);
+    busy = false;
+    renderState(Object.assign({ girisAdresi: state && state.girisAdresi }, s));
+    status(doneText);
+    return true;
+  } catch (e) {
+    busy = false;
+    if (state) renderState(state);
+    if (e.message) status(e.message, true);
+    return false;
+  }
+}
+
+$("baslat").addEventListener("click", () => control("/api/ceviri", { islem: "baslat" }, "Başlatılıyor…", "Çeviri başlatıldı; PlayStation'a bağlanıyor."));
+$("durdur").addEventListener("click", () => control("/api/ceviri", { islem: "durdur" }, "Durduruluyor…", "Çeviri durduruluyor."));
+$("duraklat").addEventListener("click", () => {
+  const paused = state && state.duraklatildi;
+  control("/api/ceviri", { islem: paused ? "devam" : "duraklat" }, paused ? "Devam ediliyor…" : "Duraklatılıyor…", paused ? "Çeviri devam ediyor" : "Duraklatıldı");
+});
+$("psnBagla").addEventListener("click", async () => {
+  const text = $("psnAdres").value.trim();
+  if (!text.includes("code=")) return status("Yapıştırdığın adreste \"code=\" yok. Girişten sonra açılan sayfanın adresini kopyala.", true);
+  if (await control("/api/ps5/psn", { adres: text }, "Sony'den hesap numarası alınıyor…", "PSN hesabı bağlandı. Şimdi 3. adım: PlayStation'ı bul.")) $("psnAdres").value = "";
+});
+$("kimlikKaydet").addEventListener("click", async () => {
+  if (await control("/api/ps5/hesap", { kimlik: $("psnKimlik").value.trim() }, "Kaydediliyor…", "Hesap kimliği kaydedildi.")) $("psnKimlik").value = "";
+});
+$("ps5Bul").addEventListener("click", async () => {
+  const out = $("bulunan");
+  out.innerHTML = "";
+  status("Ev ağında PlayStation aranıyor…");
+  try {
+    const data = await call("/api/ps5/bul");
+    if (!data.bulunan.length) return status("PlayStation bulunamadı. PlayStation açık mı, aynı ağda mı? IP adresini elle yazabilirsin.", true);
+    data.bulunan.forEach((p) => out.append(el("div", { className: "dosya" },
+      el("span", { textContent: p.ad + " · " + p.adres + (p.uyanik ? " · açık" : " · dinlenme modunda") }),
+      el("button", { textContent: "Bunu seç", onclick: () => { $("ps5Ip").value = p.adres; status(p.ad + " seçildi. Şimdi 4. adım: kodu yaz."); } }))));
+    if (data.bulunan.length === 1) $("ps5Ip").value = data.bulunan[0].adres;
+    status(data.bulunan.length + " PlayStation bulundu");
+  } catch (e) { if (e.message) status(e.message, true); }
+});
+$("eslestir").addEventListener("click", async () => {
+  const ip = $("ps5Ip").value.trim(), pin = $("ps5Pin").value.replace(/\D/g, "");
+  if (!isHome(ip)) return status("Önce 3. adımda PlayStation'ı bul ya da ev ağı adresini (192.168.x.x) yaz.", true);
+  if (pin.length !== 8) return status("PlayStation'ın gösterdiği 8 haneli kodu yaz.", true);
+  if (await control("/api/ps5/eslestir", { ip, pin }, "PlayStation ile eşleşiliyor, birkaç saniye sürer…", "PlayStation eşleşti. Yukarıdan \"Başlat\"a bas.")) $("ps5Pin").value = "";
+});
+$("unut").addEventListener("click", () => {
+  if (confirm("PSN hesap numarası ve PlayStation eşleşmesi TV'den silinsin mi? Sonra yeniden eşleştirmen gerekir.")) {
+    control("/api/ps5/unut", {}, "Siliniyor…", "Silindi. PlayStation'da Uzaktan Oynatma → Bağlı Cihazlar'dan TV'yi de kaldırabilirsin.");
+  }
+});
+
+refreshState();
+setInterval(() => { if (!document.hidden) refreshState(); }, 3000);
+
+load().then(refreshPicture);
+call("/api/paket").then(renderPacks).catch(() => {});
+setInterval(() => { if (!dragging && !document.hidden) refreshPicture(); }, 5000);
+</script>
+</body>
+</html>

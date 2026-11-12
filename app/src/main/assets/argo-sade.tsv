@@ -1,0 +1,307 @@
+# Sokak Ingilizcesini duz Ingilizceye cevirir; kucuk model duz cumleyi iyi biliyor. Elle yazildi.
+# Bicim: duzenli ifade<TAB>yerine yazilacak. Sirayla uygulanir, ozelden genele. Butun kelimeye uyar, buyuk harf fark etmez.
+
+# Rahatsiz etme ve tartisma kaliplari
+(?:busting|bustin') my chops	bothering me
+(?:busting|bustin') your chops	bothering you
+(?:busting|bustin') his chops	bothering him
+(?:busting|bustin') her chops	bothering her
+bust my chops	bother me
+bust your chops	bother you
+talking smack about (me|you|him|her|us|them)	insulting $1
+talking smack	insulting people
+talk smack	insult people
+talking trash	insulting people
+talk trash	insult people
+threw (me|you|him|her|us|them) under the bus	blamed $1 unfairly
+throw (me|you|him|her|us|them) under the bus	blame $1 unfairly
+throwing (me|you|him|her|us|them) under the bus	blaming $1 unfairly
+you got some nerve(?=[.,!?]|$| showing| coming| talking| to)	you are very rude
+don't get smart with me	do not be disrespectful to me
+quit giving me attitude	stop being disrespectful to me
+stop giving me attitude	stop being disrespectful to me
+what's your beef with me	why are you angry with me
+what's his beef with me	why is he angry with me
+what's her beef with me	why is she angry with me
+
+# Tehlike ve suc ortami kaliplari
+in deep shit	in serious trouble
+in a world of hurt	in serious trouble
+keep it on the down[ -]low	keep it secret
+on the down[ -]low	secretly
+the cops are on my tail	the police are chasing me
+the cops are on our tail	the police are chasing us
+the cops are on your tail	the police are chasing you
+the cops are on his tail	the police are chasing him
+the cops are on her tail	the police are chasing her
+shake the cops	escape the police
+shaking the cops	escaping the police
+cough up the money	pay the money
+coughed up the money	paid the money
+coughing up the money	paying the money
+the jig is up	the deception has been discovered
+we're in the clear	we are safe
+we are in the clear	we are safe
+keep your eyes peeled	stay alert
+keep an eye out for	watch for
+
+# Korku terk etme ve guven kaliplari
+chickened out	quit because of fear
+chicken out	quit because of fear
+chickening out	quitting because of fear
+bailed on (me|you|him|her|us|them)	abandoned $1
+bail on (me|you|him|her|us|them)	abandon $1
+bailing on (me|you|him|her|us|them)	abandoning $1
+flaked on (me|you|him|her|us|them)	let $1 down
+flake on (me|you|him|her|us|them)	let $1 down
+flaking on (me|you|him|her|us|them)	letting $1 down
+left (me|you|him|her|us|them) high and dry	abandoned $1
+leave (me|you|him|her|us|them) high and dry	abandon $1
+leaving (me|you|him|her|us|them) high and dry	abandoning $1
+I can vouch for	I can personally confirm
+you can count on me	you can trust me
+I've got your back	I will protect you
+we've got your back	we will protect you
+we got your back	we will protect you
+he's got your back	he will protect you
+she's got your back	she will protect you
+they've got your back	they will protect you
+
+# Sokak dilbilgisi ve kisaltilmis sorular
+I ain't saying nothing	I am not saying anything
+(you|we|they) ain't saying nothing	$1 are not saying anything
+(he|she) ain't saying nothing	$1 is not saying anything
+I ain't seen nothing	I have not seen anything
+(you|we|they) ain't seen nothing	$1 have not seen anything
+(he|she) ain't seen nothing	$1 has not seen anything
+I ain't done nothing	I have not done anything
+(you|we|they) ain't done nothing	$1 have not done anything
+(he|she) ain't done nothing	$1 has not done anything
+I ain't heard nothing	I have not heard anything
+(you|we|they) ain't heard nothing	$1 have not heard anything
+(he|she) ain't heard nothing	$1 has not heard anything
+whaddaya mean	what do you mean
+whaddya mean	what do you mean
+whaddaya want	what do you want
+whaddya want	what do you want
+whaddaya know	what do you know
+whaddya know	what do you know
+how'd you know	how did you know
+where'd you go	where did you go
+
+# Kufur yumusatma ve acik deyimler
+scared shitless	extremely frightened
+scared the shit out of (me|you|him|her|us|them)	frightened $1 badly
+scares the shit out of (me|you|him|her|us|them)	frightens $1 badly
+scare the shit out of (me|you|him|her|us|them)	frighten $1 badly
+beat the shit out of (me|you|him|her|us|them)	beat $1 severely
+beating the shit out of (me|you|him|her|us|them)	beating $1 severely
+what a load of crap	what nonsense
+(you're|you are|he's|he is|she's|she is) full of shit	$1 lying
+pain in the (?:ass|butt)	nuisance
+I don't give a rat's ass	I do not care
+(you|we|they) don't give a rat's ass	$1 do not care
+(he|she) doesn't give a rat's ass	$1 does not care
+for shits and giggles	just for fun
+(?:the )?shit hit the fan	the crisis started
+(?:the )?shit hits the fan	the crisis starts
+no way in hell	absolutely no way
+not a snowball's chance in hell	no chance at all
+that's a no-brainer	that is an easy decision
+it's a no-brainer	it is an easy decision
+
+# Deyimler
+gives a (?:shit|fuck|damn)	cares
+give a (?:shit|fuck|damn)	care
+(?:living|livin') the dream	having a great life
+stay on your grind	keep working hard
+on (my|your|his|her|the) grind	working hard
+hook (you|me|him|her|us) up with	get $1
+hook (you|me|him|her|us) up	help $1
+make yourself scarce	go away
+my bad	my mistake
+no shit	really
+for real	really
+(?:jerking|jerkin') off	masturbating
+(sits?|sitting) on (?:his|her|your|my|their) ass	$1 around
+get your ass (?:out of|outta) here	leave here
+get your ass	come
+kick your ass	beat you
+kick his ass	beat him
+kick her ass	beat her
+kick their ass	beat them
+(?:smoking|smokin') (?:dope|weed|crack)	using drugs
+smoke (?:dope|weed|crack)	use drugs
+(what|where|who|why|how|when) the (?:fuck|hell|heck)	$1
+get the (?:fuck|hell) (?:out of|outta) here	leave here
+get the (?:fuck|hell) (out|away)	get $1
+shut the (?:fuck|hell) up	shut up
+(?:fuck|piss|screw) off	go away
+pissed off	angry
+(?:screwed|fucked|messed) up	ruined
+(?:fucking|fuckin') (with|around)	messing $1
+(\p{L}+'s|\p{L}+'re|are|is|am|be|so) (?:screwed|fucked)	$1 ruined
+(all|this|that) this shit	all these things
+(this|that) shit	$1 thing
+some shit	something
+bullshit	nonsense
+I got this(?=[.,!?]|$)	I will handle this
+I got your back	I will protect you
+I got you(?=[.,!?]|$)	I will help you
+
+(is|was|be) a piece of cake	$1 very easy
+beat around the bush	avoid the subject
+beating around the bush	avoiding the subject
+bit the dust	died
+bite the dust	die
+(?:pulling|pullin') (?:my|your) leg	joking
+(?:running|runnin') (?:your|his|her|my) mouth	talking too much
+(?:ripping|rippin') (me|you|him|her|us|them) off	cheating $1
+rip (me|you|him|her|us|them) off	cheat $1
+(got|get|getting) busted	$1 caught
+(have to|got to|gotta|need to|let's) bounce	$1 leave
+keep your head down and your mouth shut	stay quiet
+keep (?:your|my) mouth shut	stay quiet
+keeping (?:your|my) mouth shut	staying quiet
+keep (?:your|my) head down	avoid attention
+keeping (?:your|my) head down	avoiding attention
+spill the beans	tell the secret
+spilling the beans	telling the secret
+blow (my|your|his|her|our) cover	reveal $1 secret identity
+blew (my|your|his|her|our) cover	revealed $1 secret identity
+blown (my|your|his|her|our) cover	revealed $1 secret identity
+blowing (my|your|his|her|our) cover	revealing $1 secret identity
+hit the road	leave
+hitting the road	leaving
+hit the sack	go to sleep
+hitting the sack	going to sleep
+call it a day	stop working
+calling it a day	stopping work
+(cost|costs) an arm and a leg	$1 a lot of money
+once in a blue moon	very rarely
+kicked the bucket	died
+kick the bucket	die
+kicking the bucket	dying
+got cold feet	became afraid
+get cold feet	become afraid
+getting cold feet	becoming afraid
+(plan|deal|things|everything|it|this|that) (?:went|goes|is going) south	$1 failed
+(?:out of|off) (?:my|your|his|her) mind	crazy
+lost (?:my|your|his|her) (?:mind|marbles)	went crazy
+lose (?:my|your|his|her) (?:mind|marbles)	go crazy
+losing (?:my|your|his|her) (?:mind|marbles)	going crazy
+sold (me|us|him|her) out	betrayed $1
+sell (me|us|him|her) out	betray $1
+selling (me|us|him|her) out	betraying $1
+rat (me|us|him|her|you) out	report $1 to the police
+ratted (me|us|him|her|you) out	reported $1 to the police
+ratting (me|us|him|her|you) out	reporting $1 to the police
+(take|took|taking) the fall	$1 the blame
+^beats? me(?=[.,!?]|$)	I do not know
+cut the crap	stop lying
+(?:your|this|that) crap	this nonsense
+don't sweat it	do not worry
+(?:barking|barkin') up the wrong tree	mistaken
+out of my league	too good for me
+out of your league	too good for you
+out of his league	too good for him
+out of her league	too good for her
+sellout	traitor
+down for whatever	ready for anything
+my crew	my gang
+your crew	your gang
+the crew	the gang
+
+# Sokak sozcukleri
+whips	cars
+(my|your|his|her|that|this|nice|new) (?:whip|ride)	$1 car
+crib	house
+feds	police
+five-o	police
+bucks	dollars
+a grand(?=[.,!?]|$| for| to| a | in)	a thousand dollars
+(two|three|four|five|six|seven|eight|nine|ten|twenty|fifty|\d+) grand	$1 thousand dollars
+strapped	armed
+gat	gun
+snitch on (me|us|him|her|you|them)	report $1 to the police
+snitched on (me|us|him|her|you|them)	reported $1 to the police
+a snitch	an informer
+the snitch	the informer
+trippin'	acting crazy
+chill out	calm down
+hella	very
+wack	bad
+lame	boring
+bitches	women
+motherfuck(?:ing|in')	damn
+(?:motherfucker|mothafucka|muthafucka|mofo)	bastard
+(?:motherfuckers|mothafuckas|muthafuckas)	bastards
+(?:fucking|fuckin'|freaking|frickin')	damn
+god ?damn	damn
+(?:dumbass|jackass)	idiot
+(\p{L}+)-ass	$1
+
+# Hitaplar
+my n[iíî]gg?a	man
+n[iíî]gg?as	guys
+n[iíî]gg?a	man
+homies	friends
+(?:homie|homey|homeboy|dawg|dude|bruh)	man
+y'all|ya'll|yall	you
+
+# Kisaltmalar
+ain't nobody got	nobody has
+ain't nobody	nobody is
+(you|we|they) ain't never (?:gonna|gon'|going to)	$1 will never
+(I|you|we|they) ain't got no	$1 have no
+(he|she|it) ain't got no	$1 has no
+(I|you|we|they) ain't got	$1 do not have
+(he|she|it) ain't got	$1 does not have
+ain't got	do not have
+I ain't	I am not
+(you|we|they) ain't	$1 are not
+(he|she|it|that|this|there) ain't	$1 is not
+ain't	is not
+I(?:'m| am)? (?:gonna|gon'|finna)	I am going to
+(he|she|it)(?:'s| is)? (?:gonna|gon'|finna)	$1 is going to
+(you|we|they)(?:'re| are)? (?:gonna|gon'|finna)	$1 are going to
+gonna|gon'|finna	going to
+I'ma|I'mma|Imma	I am going to
+(he|she) gotta	$1 has to
+gotta	have to
+wanna	want to
+gimme	give me
+lemme	let me
+I tryna	I am trying to
+(he|she) tryna	$1 is trying to
+(you|we|they) tryna	$1 are trying to
+tryna|tryin' to	trying to
+kinda	kind of
+sorta	sort of
+dunno	do not know
+outta	out of
+a lotta	a lot of
+lotta	a lot of
+hafta	have to
+oughta	should
+shoulda	should have
+coulda	could have
+woulda	would have
+gotcha	I understand
+whatcha	what are you
+(he|she|it) don't	$1 does not
+'cause|'cuz|cuz|cos|coz	because
+'em	them
+'bout	about
+'til	until
+where you been	where have you been
+c'mon	come on
+tho	though
+ol'	old
+ya	you
+yo,?
+aight|a'ight|ight	okay
+nah	no
+yeah|yep|yup	yes
+nope	no
+(\p{L}{2,})in'	$1ing

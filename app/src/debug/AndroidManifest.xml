@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug builds only: lets adb start the measurement stages through the stage extra. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <application>
+        <service android:name="dev.turkce.olcum.OlcumService" android:exported="true"
+            android:foregroundServiceType="connectedDevice"
+            tools:replace="android:exported,android:foregroundServiceType" tools:ignore="ExportedService" />
+    </application>
+</manifest>

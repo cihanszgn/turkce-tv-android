@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- The service holds the PS5 Remote Play link; Android 14 asks for one of the network permissions with this type.
+         CHANGE_NETWORK_STATE, not a Wi-Fi one, so Play does not hide the app from TVs on a cable only. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-feature android:name="android.software.leanback" android:required="true" />
+    <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
+    <!-- Settings screens the overlay permission flow checks with resolveActivity before opening them. -->
+    <queries>
+        <intent>
+            <action android:name="android.settings.action.MANAGE_OVERLAY_PERMISSION" />
+            <data android:scheme="package" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.action.MANAGE_OVERLAY_PERMISSION" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.APPLICATION_DETAILS_SETTINGS" />
+            <data android:scheme="package" />
+        </intent>
+    </queries>
+    <!-- Nothing leaves the TV: no cloud backup and, from Android 12 on, no device-to-device transfer either. -->
+    <application android:label="Türkçe TV" android:allowBackup="false"
+        android:dataExtractionRules="@xml/veri_aktarimi" android:fullBackupContent="@xml/yedek_yok"
+        android:icon="@mipmap/ic_launcher" android:banner="@drawable/banner">
+        <activity android:name=".AyarActivity" android:label="Türkçe TV" android:exported="true"
+            android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <!-- A remote or keyboard plugged in, or the TV changing display mode, must not rebuild the demo screen mid-run;
+             the screen also takes over a running demo if it is rebuilt anyway. -->
+        <activity android:name=".DenemeActivity" android:exported="false"
+            android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenSize|smallestScreenSize|screenLayout|uiMode|density|fontScale"
+            android:theme="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen" />
+        <activity android:name=".HakkindaActivity" android:exported="false"
+            android:theme="@android:style/Theme.DeviceDefault.NoActionBar" />
+        <activity android:name=".LisansActivity" android:exported="false"
+            android:theme="@android:style/Theme.DeviceDefault.NoActionBar" />
+        <service android:name=".OlcumService" android:exported="false"
+            android:foregroundServiceType="connectedDevice" />
+    </application>
+</manifest>

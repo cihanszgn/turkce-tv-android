@@ -1,0 +1,642 @@
+# Genel oyun kaliplari. Elle yazildi, hicbir oyunun metninden kopyalanmadi.
+# Bicim: Ingilizce<TAB>Turkce. Buyuk harf ve noktalama eslesmeyi etkilemez.
+
+# Kisa cevaplar
+Yes	Evet
+No	Hayır
+Yeah	Evet
+Nope	Yok
+Okay	Tamam
+OK	Tamam
+Alright	Tamam
+All right	Tamam
+Sure	Tabii
+Of course	Elbette
+Maybe	Belki
+Thanks	Sağ ol
+Thank you	Teşekkürler
+Thanks man	Sağ ol dostum
+Sorry	Üzgünüm
+I'm sorry	Üzgünüm
+Please	Lütfen
+Hello	Merhaba
+Hey	Hey
+Hi	Selam
+Goodbye	Hoşça kal
+Bye	Görüşürüz
+See you	Görüşürüz
+See you later	Sonra görüşürüz
+Good	İyi
+Great	Harika
+Nice	Güzel
+Nice one	Güzel iş
+Good job	Aferin
+Well done	Aferin
+Good work	İyi iş
+Not bad	Fena değil
+Perfect	Mükemmel
+Exactly	Aynen
+Right	Doğru
+That's right	Doğru
+You're right	Haklısın
+Wrong	Yanlış
+Really	Gerçekten mi
+What	Ne
+Why	Neden
+Why not	Neden olmasın
+How	Nasıl
+Who	Kim
+Who are you	Sen kimsin
+Where	Nerede
+When	Ne zaman
+Damn	Lanet olsun
+Shit	Kahretsin
+Oh no	Olamaz
+Oh my god	Aman tanrım
+No way	Olmaz
+Hell yeah	Aynen öyle
+Hell no	Asla
+Never	Asla
+Never mind	Boş ver
+Forget it	Unut gitsin
+Forget about it	Boş ver gitsin
+I don't know	Bilmiyorum
+I know	Biliyorum
+I understand	Anlıyorum
+I got it	Anladım
+Got it	Anladım
+Understood	Anlaşıldı
+Copy that	Anlaşıldı
+Roger that	Anlaşıldı
+I see	Anlıyorum
+Yes sir	Emredersiniz
+No problem	Sorun değil
+No worries	Dert etme
+It's fine	Sorun yok
+It's okay	Sorun değil
+It's nothing	Bir şey değil
+I'm fine	İyiyim
+I'm okay	İyiyim
+Are you okay	İyi misin
+Are you alright	İyi misin
+You okay	İyi misin
+Are you sure	Emin misin
+I'm sure	Eminim
+I'm not sure	Emin değilim
+Are you ready	Hazır mısın
+I'm ready	Hazırım
+Ready	Hazır
+Let's go	Hadi gidelim
+Come on	Hadi
+Hurry up	Acele et
+Hurry	Acele et
+Quick	Çabuk
+Quickly	Çabuk
+Faster	Daha hızlı
+Slow down	Yavaşla
+Wait	Bekle
+Wait for me	Beni bekle
+Wait here	Burada bekle
+Wait a minute	Bir dakika
+Wait a second	Bir saniye
+Hold on	Dur bir dakika
+Just a second	Bir saniye
+Listen	Dinle
+Listen to me	Beni dinle
+Look	Bak
+Look at me	Bana bak
+Look at that	Şuna bak
+Look out	Dikkat et
+Watch out	Dikkat et
+Be careful	Dikkatli ol
+Careful	Dikkat
+Stop	Dur
+Stop it	Kes şunu
+Stop right there	Olduğun yerde kal
+Stay here	Burada kal
+Stay back	Geride kal
+Stay close	Yakın dur
+Stay with me	Yanımda kal
+Stay down	Yerde kal
+Stay low	Eğil
+Stay calm	Sakin ol
+Calm down	Sakin ol
+Relax	Rahat ol
+Shut up	Kapa çeneni
+Be quiet	Sessiz ol
+Quiet	Sessiz
+Help	Yardım et
+Help me	Bana yardım et
+I need help	Yardıma ihtiyacım var
+I need your help	Yardımına ihtiyacım var
+
+# Yon ve hareket
+To the left	Sola
+To the right	Sağa
+On your left	Solunda
+On your right	Sağında
+On the left	Solda
+On the right	Sağda
+Left	Sol
+Turn left	Sola dön
+Turn right	Sağa dön
+Go left	Sola git
+Go right	Sağa git
+Straight ahead	Dümdüz ileri
+Keep going	Devam et
+Keep moving	İlerlemeye devam et
+Keep up	Geride kalma
+Go ahead	Devam et
+Go	Git
+Go go go	Hadi hadi hadi
+Move	Kımılda
+Move it	Kımılda hadi
+Move out	İlerleyin
+Get out	Dışarı çık
+Get out of here	Defol buradan
+Get out of the way	Yoldan çekil
+Get back	Geri çekil
+Get down	Yere yat
+Get up	Kalk
+Get over here	Buraya gel
+Get inside	İçeri gir
+Get in	Bin
+Get in the car	Arabaya bin
+Get out of the car	Arabadan in
+Get on	Bin
+Come here	Buraya gel
+Come with me	Benimle gel
+Come back	Geri gel
+Follow me	Beni takip et
+Follow him	Onu takip et
+Follow her	Onu takip et
+Follow them	Onları takip et
+Follow that car	Şu arabayı takip et
+This way	Bu taraftan
+Over here	Buraya
+Over there	Şurada
+Up there	Yukarıda
+Down there	Aşağıda
+Behind you	Arkanda
+Behind us	Arkamızda
+In front of you	Önünde
+Around the corner	Köşeyi dönünce
+Go back	Geri dön
+Turn around	Arkanı dön
+Run	Koş
+Run away	Kaç
+Jump	Zıpla
+Climb	Tırman
+Climb up	Yukarı tırman
+Swim	Yüz
+Crouch	Çömel
+Hide	Saklan
+Open the door	Kapıyı aç
+Close the door	Kapıyı kapat
+Lets get out of here	Hadi buradan gidelim
+Let's get out of here	Hadi buradan gidelim
+We have to go	Gitmemiz lazım
+We need to go	Gitmemiz lazım
+We have to move	Hareket etmeliyiz
+We gotta go	Gitmemiz lazım
+I'm going	Gidiyorum
+I'm coming	Geliyorum
+I'm on my way	Yoldayım
+On my way	Yoldayım
+We're here	Geldik
+We're almost there	Az kaldı
+Almost there	Az kaldı
+Where are you	Neredesin
+Where are you going	Nereye gidiyorsun
+Where are we going	Nereye gidiyoruz
+Where is it	Nerede
+What happened	Ne oldu
+What's going on	Neler oluyor
+What's happening	Neler oluyor
+What's wrong	Sorun ne
+What are you doing	Ne yapıyorsun
+What do you want	Ne istiyorsun
+What do we do	Ne yapacağız
+What now	Şimdi ne olacak
+What is this	Bu ne
+What is that	O ne
+What the hell	Ne oluyor be
+What the hell is that	O da ne öyle
+Who is that	O kim
+Who's there	Kim var orada
+How are you	Nasılsın
+How much	Ne kadar
+How much is it	Ne kadar tutuyor
+How long	Ne kadar sürer
+
+# Catisma
+Take cover	Siper al
+Get to cover	Sipere geç
+Cover me	Beni koru
+Covering fire	Destek ateşi
+Reloading	Şarjör değiştiriyorum
+I'm reloading	Şarjör değiştiriyorum
+I'm out of ammo	Mermim bitti
+Out of ammo	Mermi bitti
+Need ammo	Mermi lazım
+Open fire	Ateş açın
+Fire	Ateş
+Shoot	Ateş et
+Shoot him	Vur onu
+Shoot them	Vur onları
+Don't shoot	Ateş etme
+Hold your fire	Ateşi kesin
+Cease fire	Ateşi kesin
+Kill him	Öldür onu
+Kill them	Öldür onları
+Kill them all	Hepsini öldür
+Enemy spotted	Düşman görüldü
+Enemy down	Düşman etkisiz
+Enemies ahead	İleride düşman var
+Contact	Temas
+Contact left	Solda temas
+Contact right	Sağda temas
+Target down	Hedef etkisiz
+Target eliminated	Hedef yok edildi
+Target acquired	Hedef bulundu
+They're here	Geldiler
+They're coming	Geliyorlar
+Here they come	İşte geliyorlar
+They're everywhere	Her yerdeler
+They're behind us	Arkamızdalar
+They saw us	Bizi gördüler
+He saw us	Bizi gördü
+He's dead	O öldü
+She's dead	O öldü
+They're dead	Onlar öldü
+He's down	Vuruldu
+Man down	Yaralı var
+I'm hit	Vuruldum
+I've been shot	Vuruldum
+I'm hurt	Yaralandım
+You're hurt	Yaralanmışsın
+I'm dying	Ölüyorum
+Grenade	El bombası
+Sniper	Keskin nişancı
+Police	Polis
+Cops	Polisler
+The cops are here	Polisler geldi
+Lose the cops	Polisleri ekip at
+Freeze	Kıpırdama
+Don't move	Kıpırdama
+Hands up	Eller yukarı
+Put your hands up	Ellerini kaldır
+Drop it	Bırak onu
+Drop your weapon	Silahını bırak
+Drop the gun	Silahı bırak
+Put the gun down	Silahı indir
+Give me the gun	Silahı bana ver
+Give me that	Onu bana ver
+Give it to me	Onu bana ver
+Fight	Dövüş
+Fight back	Karşılık ver
+Attack	Saldır
+Retreat	Geri çekilin
+Fall back	Geri çekilin
+Defend	Savun
+Surrender	Teslim ol
+It's a trap	Bu bir tuzak
+It's over	Bitti
+We did it	Başardık
+We made it	Başardık
+You did it	Başardın
+I did it	Başardım
+We lost him	Onu kaybettik
+We're clear	Temiz
+Area clear	Bölge temiz
+All clear	Her yer temiz
+Clear	Temiz
+Quiet now	Şimdi sessiz ol
+Stay quiet	Sessiz kal
+Stay hidden	Gizli kal
+Don't let them see you	Seni görmesinler
+Don't be seen	Görünme
+Knock him out	Bayılt onu
+
+# Araba
+Drive	Sür
+Keep driving	Sürmeye devam et
+Drive faster	Daha hızlı sür
+Drive slower	Daha yavaş sür
+Step on it	Bas gaza
+Pull over	Kenara çek
+Park here	Buraya park et
+Park the car	Arabayı park et
+Stop the car	Arabayı durdur
+Start the car	Arabayı çalıştır
+Watch the road	Yola bak
+You're going the wrong way	Yanlış yöne gidiyorsun
+Wrong way	Yanlış yön
+Take the next left	İlk soldan dön
+Take the next right	İlk sağdan dön
+Get on the bike	Motora bin
+Get on the horse	Ata bin
+
+# Gorev ve bilgi kutulari
+Mission passed	Görev tamamlandı
+Mission failed	Görev başarısız
+Mission complete	Görev tamamlandı
+Mission completed	Görev tamamlandı
+Mission accomplished	Görev tamamlandı
+New mission	Yeni görev
+New objective	Yeni hedef
+Objective	Hedef
+Objective complete	Hedef tamamlandı
+Objective completed	Hedef tamamlandı
+Objective updated	Hedef güncellendi
+Objective failed	Hedef başarısız
+Quest complete	Görev tamamlandı
+Quest completed	Görev tamamlandı
+Quest updated	Görev güncellendi
+Quest failed	Görev başarısız
+New quest	Yeni görev
+Side quest	Yan görev
+Main quest	Ana görev
+Task complete	Görev tamamlandı
+Task failed	Görev başarısız
+Challenge complete	Meydan okuma tamamlandı
+Level up	Seviye atladın
+New skill unlocked	Yeni yetenek açıldı
+New item unlocked	Yeni eşya açıldı
+Achievement unlocked	Başarım açıldı
+Reward	Ödül
+Checkpoint	Kontrol noktası
+Checkpoint reached	Kontrol noktasına ulaşıldı
+Game saved	Oyun kaydedildi
+Saving	Kaydediliyor
+Autosave	Otomatik kayıt
+Loading	Yükleniyor
+Please wait	Lütfen bekle
+Game over	Oyun bitti
+You died	Öldün
+You are dead	Öldün
+You lose	Kaybettin
+You lost	Kaybettin
+You win	Kazandın
+You won	Kazandın
+Victory	Zafer
+Defeat	Yenilgi
+Wasted	Öldün
+Busted	Yakalandın
+Time's up	Süre doldu
+Out of time	Süre doldu
+Time remaining	Kalan süre
+Go to the marked location	İşaretli yere git
+Go to the marked area	İşaretli bölgeye git
+Go to the marker	İşarete git
+Go to the waypoint	Rota noktasına git
+Go to the objective	Hedefe git
+Reach the destination	Hedefe ulaş
+Reach the marked location	İşaretli yere ulaş
+Follow the marked route	İşaretli yolu izle
+Follow the route	Rotayı izle
+Follow the path	Yolu izle
+Follow the road	Yolu izle
+Return to the area	Bölgeye geri dön
+Return to the mission area	Görev bölgesine dön
+You are leaving the mission area	Görev bölgesinden çıkıyorsun
+You left the mission area	Görev bölgesinden çıktın
+Find the key	Anahtarı bul
+Find a way out	Çıkış yolu bul
+Find a way in	Giriş yolu bul
+Find a vehicle	Bir araç bul
+Find cover	Siper bul
+Search the area	Bölgeyi ara
+Search the room	Odayı ara
+Investigate the area	Bölgeyi araştır
+Talk to him	Onunla konuş
+Talk to her	Onunla konuş
+Speak to the guard	Muhafızla konuş
+Defeat the enemies	Düşmanları yen
+Defeat all enemies	Tüm düşmanları yen
+Kill all enemies	Tüm düşmanları öldür
+Eliminate the enemies	Düşmanları yok et
+Eliminate the target	Hedefi yok et
+Eliminate all targets	Tüm hedefleri yok et
+Destroy the target	Hedefi yok et
+Protect the target	Hedefi koru
+Survive	Hayatta kal
+Escape	Kaç
+Escape the area	Bölgeden kaç
+Escape the police	Polisten kaç
+Lose the police	Polisi ekip at
+Lose your wanted level	Aranma seviyeni düşür
+Collect the items	Eşyaları topla
+Collect all items	Tüm eşyaları topla
+Pick up the item	Eşyayı al
+Open the map	Haritayı aç
+Open the menu	Menüyü aç
+Open the inventory	Envanteri aç
+Press pause to open the map	Haritayı açmak için duraklat
+Your inventory is full	Envanterin dolu
+Inventory full	Envanter dolu
+Not enough money	Yeterli paran yok
+You don't have enough money	Yeterli paran yok
+Not enough ammo	Yeterli mermi yok
+Low health	Sağlık düşük
+Your health is low	Sağlığın düşük
+Health	Sağlık
+Armor	Zırh
+Ammo	Mermi
+Money	Para
+Weapon	Silah
+Weapons	Silahlar
+Map	Harita
+Inventory	Envanter
+Skills	Yetenekler
+Hold to run	Koşmak için basılı tut
+Hold to sprint	Depar için basılı tut
+Hold to aim	Nişan almak için basılı tut
+Press to continue	Devam etmek için bas
+Press any button	Bir tuşa bas
+Press any button to continue	Devam etmek için bir tuşa bas
+Press any key to continue	Devam etmek için bir tuşa bas
+
+# Menu
+Pause	Duraklat
+Paused	Duraklatıldı
+Resume	Devam et
+Continue	Devam et
+Start	Başla
+New game	Yeni oyun
+Load game	Oyun yükle
+Save game	Oyunu kaydet
+Settings	Ayarlar
+Options	Seçenekler
+Controls	Kontroller
+Quit	Çık
+Quit game	Oyundan çık
+Exit	Çıkış
+Exit game	Oyundan çık
+Quit to main menu	Ana menüye dön
+Main menu	Ana menü
+Back	Geri
+Cancel	İptal
+Confirm	Onayla
+Accept	Kabul et
+Decline	Reddet
+Retry	Tekrar dene
+Try again	Tekrar dene
+Restart	Yeniden başla
+Restart mission	Görevi yeniden başlat
+Restart from checkpoint	Kontrol noktasından başla
+Skip	Atla
+Next	Sonraki
+Previous	Önceki
+Are you sure you want to quit	Çıkmak istediğine emin misin
+Unsaved progress will be lost	Kaydedilmemiş ilerleme kaybolacak
+
+# Sohbet
+I told you	Sana söyledim
+I can't do this	Bunu yapamam
+I can't do it	Yapamam
+I can do this	Bunu yapabilirim
+I can't believe it	İnanamıyorum
+I can't believe this	Buna inanamıyorum
+I don't care	Umurumda değil
+I don't think so	Sanmıyorum
+I don't believe you	Sana inanmıyorum
+I believe you	Sana inanıyorum
+I trust you	Sana güveniyorum
+Trust me	Bana güven
+I need you	Sana ihtiyacım var
+I love you	Seni seviyorum
+I hate you	Senden nefret ediyorum
+I miss you	Seni özledim
+I'll be back	Geri döneceğim
+I'll be right back	Hemen dönerim
+I'll wait here	Burada bekleyeceğim
+I'll take care of it	Ben hallederim
+I'll handle it	Ben hallederim
+I'll do it	Ben yaparım
+Leave me alone	Beni rahat bırak
+Leave it	Bırak
+Let me go	Bırak beni
+Let's do this	Hadi yapalım şunu
+Let's talk	Konuşalım
+Let's see	Bakalım
+We need to talk	Konuşmamız lazım
+We have a problem	Bir sorunumuz var
+We've got a problem	Bir sorunumuz var
+That's it	İşte bu
+That's enough	Yeter
+Enough	Yeter
+That's not funny	Hiç komik değil
+That was close	Kıl payı kurtulduk
+You're crazy	Sen delisin
+You're late	Geç kaldın
+You're kidding	Şaka yapıyorsun
+Are you kidding me	Dalga mı geçiyorsun
+Are you crazy	Delirdin mi
+Are you serious	Ciddi misin
+You can do it	Yapabilirsin
+You got this	Halledersin
+You owe me	Bana borçlusun
+Good luck	Bol şans
+Good morning	Günaydın
+Good night	İyi geceler
+Nice to meet you	Tanıştığımıza memnun oldum
+Long time no see	Görüşmeyeli uzun zaman oldu
+Take care	Kendine iyi bak
+Take it easy	Sakin ol
+Tell me	Söyle bana
+Tell me everything	Bana her şeyi anlat
+Don't worry	Merak etme
+Don't do it	Yapma
+Don't do that	Bunu yapma
+Don't go	Gitme
+Don't leave me	Beni bırakma
+Don't touch me	Bana dokunma
+Don't touch that	Ona dokunma
+Don't look at me	Bana bakma
+Don't look back	Arkana bakma
+Don't stop	Durma
+Don't tell anyone	Kimseye söyleme
+Don't say a word	Tek kelime etme
+
+# Argo ve gunluk kaliplar
+What's up	Naber
+What's up man	Naber dostum
+What's good	Ne var ne yok
+You feel me	Anladın mı
+You know what I'm saying	Ne dediğimi anlıyorsun
+Know what I mean	Ne demek istediğimi anladın mı
+I feel you	Seni anlıyorum
+I got you	Arkandayım
+I got your back	Arkanı kollarım
+I got this	Ben hallederim
+My bad	Benim hatam
+No big deal	Önemli değil
+It's all good	Her şey yolunda
+All good	Sorun yok
+We're good	Aramız iyi
+We cool	Aramız iyi mi
+Be cool	Sakin ol
+Chill out	Sakin ol
+Easy man	Sakin ol dostum
+Cut it out	Kes şunu
+Knock it off	Kes şunu
+Get lost	Defol
+Beat it	Toz ol
+Piss off	Defol
+Fuck off	Siktir git
+Fuck you	Siktir git
+Screw you	Canın cehenneme
+Go to hell	Cehenneme git
+Shut the fuck up	Kapa çeneni lan
+Bullshit	Saçmalık
+That's bullshit	Bu tam bir saçmalık
+No shit	Yok artık
+For real	Gerçekten mi
+You serious	Ciddi misin
+You kidding me	Dalga mı geçiyorsun
+You gotta be kidding me	Şaka yapıyor olmalısın
+You're full of shit	Palavra atıyorsun
+Holy shit	Hay aksi
+Oh shit	Siktir
+God damn it	Allah kahretsin
+Son of a bitch	Orospu çocuğu
+What the fuck	Ne oluyor lan
+What the hell is going on	Neler oluyor lan
+Who cares	Kimin umurunda
+I don't give a shit	Umurumda değil
+I don't give a fuck	Sikimde değil
+I'm out	Ben kaçtım
+I'm out of here	Ben gidiyorum
+Let's bounce	Kaçalım
+Let's roll	Gidelim
+Peace out	Görüşürüz
+See you around	Görüşürüz
+Catch you later	Sonra görüşürüz
+Hit me up	Beni ara
+Watch your mouth	Ağzını topla
+Watch your back	Arkana dikkat et
+Mind your own business	Sen kendi işine bak
+None of your business	Seni ilgilendirmez
+Get over it	Aş artık bunu
+Get a grip	Kendine gel
+Pull yourself together	Kendine gel
+Man up	Erkek ol
+Hold up	Bekle
+Wait up	Beni bekle
+Come on man	Hadi ama dostum
+You're dead	Öldün sen
+You're a dead man	Sen öldün
+I'm just saying	Öylesine söylüyorum
+Just saying	Öylesine söylüyorum
+It is what it is	Durum bu
+That's what I'm talking about	İşte bundan bahsediyorum
+Now we're talking	İşte şimdi oldu
+Let it all out	İçindekileri dök
+Get off my back	Yakamdan düş
+Give me a break	Yeter artık
+Give it a rest	Kes artık
+You lost your mind	Aklını mı kaçırdın
+I'm broke	Beş parasızım
+Pay up	Paranı öde
+I owe you one	Sana borçluyum

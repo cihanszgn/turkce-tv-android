@@ -1,0 +1,67 @@
+diff --git a/src/common/binary.cpp b/src/common/binary.cpp
+index 472f5a2..f36e26e 100644
+--- a/src/common/binary.cpp
++++ b/src/common/binary.cpp
+@@ -5,6 +5,7 @@
+ #include "common/types.h"
+ #include "tensors/cpu/integer_common.h"
+ 
++#include <cstring>
+ #include <string>
+ 
+ namespace marian {
+@@ -49,12 +50,18 @@ void loadItems(const void* current, std::vector<io::Item>& items, bool mapped) {
+   for(int i = 0; i < numHeaders; ++i) {
+     uint64_t len = headers[i].shapeLength;
+     items[i].shape.resize(len); 
+-    const int* arr = get<int>(current, len); // read shape
+-    std::copy(arr, arr + len, items[i].shape.begin()); // copy to Item::shape 
++    // Names have any length, so what follows them is unaligned: 32-bit ARM needs a byte copy here.
++    const char* arr = get<char>(current, len * sizeof(int)); // read shape
++    for(uint64_t d = 0; d < len; ++d) {
++      int dim;
++      std::memcpy(&dim, arr + d * sizeof(int), sizeof(int));
++      items[i].shape.set((int)d, dim);
++    }
+   }
+ 
+   // move by offset bytes, aligned to 256-bytes boundary
+-  uint64_t offset = *get<uint64_t>(current);
++  uint64_t offset;
++  std::memcpy(&offset, get<char>(current, sizeof(offset)), sizeof(offset));
+   get<char>(current, offset);
+ 
+   for(int i = 0; i < numHeaders; ++i) {
+diff --git a/src/tensors/cpu/integer_common.h b/src/tensors/cpu/integer_common.h
+index 4e4da66..92c24c5 100644
+--- a/src/tensors/cpu/integer_common.h
++++ b/src/tensors/cpu/integer_common.h
+@@ -21,6 +21,7 @@
+ #endif
+ 
+ #include <cassert>
++#include <cstring>
+ #include <cstddef>
+ 
+ namespace marian {
+@@ -157,8 +158,8 @@ void prepareAndTransposeB(io::Item& item, const char * input) {
+     }
+ #endif
+     //Copy the quantMult
+-    float quantMult = *(reinterpret_cast<const float *>(reinterpret_cast<const Integer *>(input) + item.shape.elements()));
+-    *(reinterpret_cast<float *>(&(*(output_tensor + item.shape.elements())))) = quantMult;
++    // The multiplier sits right after the int8 data, so it can be unaligned; 32-bit ARM needs a byte copy.
++    std::memcpy(output_tensor + item.shape.elements(), reinterpret_cast<const Integer *>(input) + item.shape.elements(), sizeof(float));
+ #else // COMPILE_CPU
+     ABORT("Using intgemm models is supported only with -DCOMPILE_CPU=on");
+ #endif
+@@ -167,7 +168,8 @@ void prepareAndTransposeB(io::Item& item, const char * input) {
+ template<Type vtype>
+ void unquantizeWemb(io::Item& item, const char * input) {
+     typedef typename intgemm_<vtype>::type Integer;
+-    float quantMult = *(reinterpret_cast<const float *>(reinterpret_cast<const Integer *>(input) + item.shape.elements()));
++    float quantMult;
++    std::memcpy(&quantMult, reinterpret_cast<const Integer *>(input) + item.shape.elements(), sizeof(float));
+     float * output_tensor = reinterpret_cast<float *>(&(*item.bytes.begin()));
+     // Explicitly calculate n once beforehand because the compiler does not pick up on its
+     // static nature, and will end up calling marian::Shape::dim() a lot.
