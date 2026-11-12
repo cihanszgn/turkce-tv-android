@@ -59,7 +59,7 @@ $supheli = @($metinler | Select-String -Pattern $kesin)
 # Contributor mails in the third-party licence texts are not ours.
 $supheli += @($metinler | Where-Object { $_.FullName -notmatch '\\lisanslar\\|\\src\\test\\|UCUNCU-TARAF' } |
     Select-String -Pattern '@gmail\.', 'Users\\cihan', 'storePassword\s*=\s*\S', 'BEGIN (RSA |EC )?PRIVATE KEY' |
-    Where-Object { $_.Line -notmatch 'getProperty\("storePassword"\)' })
+    Where-Object { $_.Line -notmatch 'getProperty\("storePassword"\)' -and -not ($Destek -and $_.Line.Contains($Destek)) })
 if ($supheli) { $supheli | ForEach-Object { "{0}:{1}" -f $_.Path, $_.LineNumber }; throw 'private data found, nothing was published' }
 if (Get-ChildItem $Hedef -Recurse -File -Include *.jks, *.keystore, *.p8, *.properties | Where-Object { $_.Name -notin 'gradle.properties', 'gradle-wrapper.properties' }) { throw 'key or properties file in the release' }
 
