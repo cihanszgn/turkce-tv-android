@@ -179,6 +179,7 @@ internal class BoundedWorkers(workers: Int, waiting: Int, name: String) {
  */
 internal object AyarSunucusu {
     const val PORT = 8095
+    private const val PORT_TRIES = 10
     private const val IDLE_MS = 15 * 60_000L
     private const val CHECK_MS = 30_000L
     private const val SOCKET_TIMEOUT_MS = 10_000
@@ -192,6 +193,7 @@ internal object AyarSunucusu {
 
     @Volatile private var server: ServerSocket? = null
     @Volatile private var token = ""
+    @Volatile private var port = PORT
     @Volatile private var lastUse = 0L
 
     /** The page address for the QR code, or null when the TV has no home-network address. */
@@ -202,12 +204,30 @@ internal object AyarSunucusu {
         if (server == null) {
             val app = context.applicationContext
             token = newToken()
-            val socket = ServerSocket().apply { reuseAddress = true; bind(InetSocketAddress(PORT)) }
+            val socket = bindFree()
             server = socket
+            port = socket.localPort
             thread(isDaemon = true, name = "ayar-sunucu") { accept(socket, app) }
             thread(isDaemon = true, name = "ayar-bekci") { watch(socket) }
         }
-        return "http://$address:$PORT/?t=$token"
+        return "http://$address:$port/?t=$token"
+    }
+
+    /** The usual port, or one of the next few when another app on the TV already holds it. */
+    private fun bindFree(): ServerSocket {
+        var last: java.io.IOException? = null
+        for (candidate in PORT until PORT + PORT_TRIES) {
+            val socket = ServerSocket()
+            try {
+                socket.reuseAddress = true
+                socket.bind(InetSocketAddress(candidate))
+                return socket
+            } catch (e: java.io.IOException) {
+                last = e
+                runCatching { socket.close() }
+            }
+        }
+        throw last ?: java.io.IOException("no free port")
     }
 
     @Synchronized
