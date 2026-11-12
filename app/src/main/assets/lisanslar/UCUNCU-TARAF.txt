@@ -1,4 +1,4 @@
-Türkçe TV: üçüncü taraf bileşenleri
+Tv Türkçe Altyazı: üçüncü taraf bileşenleri
 Biçim: ad | sürüm | lisans | telif
 Uygulamanın tamamı AGPL-3.0 ile dağıtılır (AGPL-3.0.txt).
 ML Kit ve Google Play hizmetleri: ML Kit Hizmet Şartları https://developers.google.com/ml-kit/terms ; içlerindeki bileşenlerin bildirimleri GOOGLE-BILESENLERI.txt dosyasında.

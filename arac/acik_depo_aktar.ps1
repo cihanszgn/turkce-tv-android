@@ -55,9 +55,10 @@ $gercek = @(Select-String -Path "$olcum\TEST-PLANI.md", "$olcum\SONUC.md" -Patte
 $eposta = git -C $depo config user.email
 $kesin = @($gercek) + @($eposta) | Where-Object { $_ } | ForEach-Object { [regex]::Escape($_) }
 $supheli = @($metinler | Select-String -Pattern $kesin)
-# Example addresses in the tests and contributor mails in the third-party licence texts are not ours.
+# Example addresses (192.168.1.20 in the setup page and tests) are fine; the real ones are checked above.
+# Contributor mails in the third-party licence texts are not ours.
 $supheli += @($metinler | Where-Object { $_.FullName -notmatch '\\lisanslar\\|\\src\\test\\|UCUNCU-TARAF' } |
-    Select-String -Pattern '192\.168\.\d+\.\d+', '@gmail\.', 'Users\\cihan', 'storePassword\s*=\s*\S', 'BEGIN (RSA |EC )?PRIVATE KEY' |
+    Select-String -Pattern '@gmail\.', 'Users\\cihan', 'storePassword\s*=\s*\S', 'BEGIN (RSA |EC )?PRIVATE KEY' |
     Where-Object { $_.Line -notmatch 'getProperty\("storePassword"\)' })
 if ($supheli) { $supheli | ForEach-Object { "{0}:{1}" -f $_.Path, $_.LineNumber }; throw 'private data found, nothing was published' }
 if (Get-ChildItem $Hedef -Recurse -File -Include *.jks, *.keystore, *.p8, *.properties | Where-Object { $_.Name -notin 'gradle.properties', 'gradle-wrapper.properties' }) { throw 'key or properties file in the release' }

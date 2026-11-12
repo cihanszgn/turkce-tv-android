@@ -14,12 +14,11 @@ import java.net.URL
 import java.net.URLEncoder
 import java.util.Base64
 import java.util.concurrent.atomic.AtomicBoolean
-import org.json.JSONArray
 import org.json.JSONObject
 
 /** The translation runs until someone stops it from the TV or the phone, or the PS5 ends the session. */
 internal const val UNTIL_STOPPED = 0
-internal const val OPEN_APP_FIRST = "Televizyonda Türkçe TV uygulamasını açıp tekrar deneyin."
+internal const val OPEN_APP_FIRST = "Televizyonda Tv Türkçe Altyazı uygulamasını açıp tekrar deneyin."
 internal const val MODEL_FAILED = "Çeviri modeli kurulamadı: TV'de yer var mı?"
 private const val PIN_DIGITS = 8
 private const val ACCOUNT_BYTES = 8
@@ -188,7 +187,12 @@ internal object Ps5Setup {
             val code = connection.responseCode
             val stream = if (code in 200..299) connection.inputStream else connection.errorStream
             val text = stream?.bufferedReader()?.use { it.readText() } ?: ""
-            check(code in 200..299) { "Sony kodu kabul etmedi ($code). Kod bir kez ve birkaç dakika geçerli: girişi baştan yap." }
+            // No status number on the page: the person needs only what to do next.
+            check(code !in 400..499) {
+                "Sony bu girişi kabul etmedi: adres eksik kopyalandı ya da süresi geçti (her adres bir kez ve birkaç dakika geçerli). " +
+                    "«Sony'de giriş yap»a yeniden bas, yeni adresi yapıştır."
+            }
+            check(code in 200..299) { "Sony'nin sunucusu şu an cevap vermiyor. Birkaç dakika sonra tekrar dene." }
             return JSONObject(text)
         } finally {
             connection.disconnect()
@@ -277,7 +281,7 @@ internal object Ps5Setup {
         ChiakiGate.calls.run(ChiakiGate.PAIRING) {
             check(!Translation.running.get()) { "Önce çeviriyi durdur." }
             val keys = ChiakiBridge.regist(host, accountId, digits.toInt())
-                ?: error("PlayStation eşleşmeyi kabul etmedi. Kod 5 dakika geçerli; ekrandaki güncel kodu gir, PlayStation açık ve aynı ağda olsun.")
+                ?: throw PairRefused()
             Pairing(keys.copyOfRange(0, 16), keys.copyOfRange(16, 32), accountId, host).save(File(context.filesDir, PAIRING_FILE))
         }
     }
@@ -304,6 +308,4 @@ internal object Ps5Setup {
             // A key file from before encryption that could not be encrypted yet: pairing works, the next read retries.
             .put("sifrelemeBekliyor", SecretFiles.migrationPending)
     }
-
-    fun discoverJson(): String = JSONObject().put("bulunan", JSONArray(discover().map { it.toJson() })).toString()
 }

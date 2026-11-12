@@ -1,7 +1,7 @@
 # /// script
 # dependencies = ["pillow", "font-roboto"]
 # ///
-"""Türkçe TV: ikon, TV banner'ı ve Google Play mağaza görsellerini üretir.
+"""Tv Türkçe Altyazı: ikon, TV banner'ı ve Google Play mağaza görsellerini üretir.
 
 Çalıştırma: uv run --with pillow --with font-roboto arac\\gorsel_uret.py
 Yazı tipi: Roboto Bold (Apache 2.0, PyPI "font-roboto" paketi). Yalnız çizim, fotoğraf yok.
@@ -25,7 +25,7 @@ SLOGAN_COL = (196, 208, 222)
 SCREEN = (27, 46, 68)
 FADED = (255, 255, 255, 120)
 SLOGAN = "Oyun altyazısı televizyonda Türkçe"
-TITLE = "Türkçe TV"
+TITLE = "Tv Türkçe Altyazı"
 
 
 def font_path():
@@ -107,9 +107,9 @@ def stacked_banner(w, h, ss):
     W, H = w * ss, h * ss
     img = gradient(W, H)
     d = ImageDraw.Draw(img)
-    f_t = fit_font(TITLE, W * 0.56, H * 0.24)
+    f_t = fit_font(TITLE, W * 0.88, H * 0.22)
     f_s = fit_font(SLOGAN, W * 0.80, H * 0.074)
-    gw = H * 0.40
+    gw = H * 0.34
     gh = gw * 0.82
     tb = f_t.getbbox(TITLE)
     sb = f_s.getbbox(SLOGAN)
@@ -127,9 +127,9 @@ def feature_graphic(w, h, ss):
     W, H = w * ss, h * ss
     img = gradient(W, H)
     d = ImageDraw.Draw(img)
-    gw = H * 0.62
+    gw = H * 0.50
     gh = gw * 0.82
-    text_w = W * 0.50
+    text_w = W - 2 * W * 0.07 - gw - W * 0.05
     f_t = fit_font(TITLE, text_w, H * 0.26)
     f_s = fit_font(SLOGAN, text_w, H * 0.075)
     tb = f_t.getbbox(TITLE)
@@ -137,7 +137,7 @@ def feature_graphic(w, h, ss):
     th, sh = tb[3] - tb[1], sb[3] - sb[1]
     gap = H * 0.06
     block_w = max(tb[2] - tb[0], sb[2] - sb[0])
-    spacing = W * 0.07
+    spacing = W * 0.05
     total_w = gw + spacing + block_w
     x0 = (W - total_w) / 2
     glyph(img, x0 + gw / 2, H / 2, gw, screen_fill=SCREEN)

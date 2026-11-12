@@ -309,7 +309,7 @@ internal object AyarSunucusu {
                     val results = runCatching { YamaArama.search(game) }
                     val reply = JSONObject().put("links", YamaArama.links(game))
                         .put("results", JSONArray(results.getOrDefault(emptyList()).map { it.toJson() }))
-                    results.exceptionOrNull()?.let { reply.put("error", it.message ?: "Arama yapılamadı.") }
+                    results.exceptionOrNull()?.let { reply.put("error", SetupGuide.friendlyError(request.path, it)) }
                     respond(out, 200, json, reply.toString())
                 }
                 "GET /api/paket/dosyalar" -> {
@@ -344,18 +344,22 @@ internal object AyarSunucusu {
                 else -> respond(out, 404, "text/plain", "Yok")
             }
         } catch (e: Exception) {
-            respond(out, 400, json, JSONObject().put("error", e.message ?: "İşlem yapılamadı.").toString())
+            respond(out, 400, json, JSONObject().put("error", SetupGuide.friendlyError(request.path, e)).toString())
         }
     }
 
     /** Translation on and off, and the PS5 pairing steps. Answers with the state, never with a key. */
     private fun controls(request: HttpRequest, out: OutputStream, context: Context) {
         val json = "application/json; charset=utf-8"
-        fun state() = Translation.toJson(context).toString()
+        // Every answer carries the setup steps too, so the page's ticks follow each button at once and survive a reload.
+        fun stateJson() = Translation.toJson(context).let {
+            it.put("girisAdresi", Ps5Setup.loginUrl).put("kurulum", SetupGuide.toJson(context, it.getJSONObject("ps5"), localAddress()))
+        }
+        fun state() = stateJson().toString()
         try {
             val body = if (request.method == "POST" && request.body.isNotBlank()) JSONObject(request.body) else JSONObject()
             when ("${request.method} ${request.path}") {
-                "GET /api/durum" -> respond(out, 200, json, Translation.toJson(context).put("girisAdresi", Ps5Setup.loginUrl).toString())
+                "GET /api/durum" -> respond(out, 200, json, state())
                 "POST /api/ceviri" -> {
                     when (body.optString("islem")) {
                         "baslat" -> {
@@ -369,7 +373,17 @@ internal object AyarSunucusu {
                     }
                     respond(out, 200, json, state())
                 }
-                "GET /api/ps5/bul" -> respond(out, 200, json, Ps5Setup.discoverJson())
+                "GET /api/ps5/bul" -> {
+                    val found = Ps5Setup.discover()
+                    // One PS5 at home is the one: step 3 is done without a tap. Several wait for the phone to pick.
+                    found.singleOrNull()?.let { SetupGuide.choose(context, it.address) }
+                    respond(out, 200, json, stateJson().put("bulunan", JSONArray(found.map { it.toJson() })).toString())
+                }
+                "POST /api/ps5/kurulum" -> {
+                    if (body.has("uzaktanOynatma")) SetupGuide.markRemotePlay(context, body.getBoolean("uzaktanOynatma"))
+                    if (body.has("adres")) SetupGuide.choose(context, body.getString("adres"))
+                    respond(out, 200, json, state())
+                }
                 "POST /api/ps5/psn" -> {
                     val code = Ps5Setup.codeFrom(body.optString("adres"))
                         ?: throw IllegalArgumentException("Bu adreste giriş kodu yok. Sony sayfasında giriş yaptıktan sonra açılan sayfanın adresini kopyala.")
@@ -383,11 +397,23 @@ internal object AyarSunucusu {
                     respond(out, 200, json, state())
                 }
                 "POST /api/ps5/eslestir" -> {
-                    Ps5Setup.pair(context, body.optString("ip"), body.optString("pin"))
+                    val host = SetupGuide.cleanAddress(body.optString("ip"))
+                    SetupGuide.addressProblem(host)?.let { throw IllegalArgumentException(it) }
+                    try {
+                        Ps5Setup.pair(context, host, body.optString("pin"))
+                    } catch (refused: PairRefused) {
+                        // One more look at the network tells a wrong code from a sleeping, missing or moved PS5.
+                        val found = runCatching { Ps5Setup.discover() }.getOrDefault(emptyList())
+                        throw IllegalStateException(SetupGuide.pairRefused(host, found), refused)
+                    }
+                    SetupGuide.choose(context, host)
+                    // Pairing needs Remote Play on, so step 1 stays ticked even if the pairing is forgotten later.
+                    SetupGuide.markRemotePlay(context, true)
                     respond(out, 200, json, state())
                 }
                 "POST /api/ps5/uyandir" -> {
-                    check(Ps5Setup.wake(context)) { "Uyandırma gönderilemedi." }
+                    check(Ps5Setup.status(context).getBoolean("eslesti")) { "Önce PlayStation'ı eşleştir (4. adım)." }
+                    check(Ps5Setup.wake(context)) { "PS5'e uyandırma gönderilemedi. Kumandadaki PS tuşuna basarak PS5'i elle aç." }
                     respond(out, 200, json, state())
                 }
                 "POST /api/ps5/unut" -> {
@@ -397,7 +423,7 @@ internal object AyarSunucusu {
                 else -> respond(out, 404, "text/plain", "Yok")
             }
         } catch (e: Exception) {
-            respond(out, 400, json, JSONObject().put("error", e.message ?: "İşlem yapılamadı.").toString())
+            respond(out, 400, json, JSONObject().put("error", SetupGuide.friendlyError(request.path, e)).toString())
         }
     }
 

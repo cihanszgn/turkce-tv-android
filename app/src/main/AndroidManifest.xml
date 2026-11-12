@@ -25,10 +25,10 @@
         </intent>
     </queries>
     <!-- Nothing leaves the TV: no cloud backup and, from Android 12 on, no device-to-device transfer either. -->
-    <application android:label="Türkçe TV" android:allowBackup="false"
+    <application android:label="Tv Türkçe Altyazı" android:allowBackup="false"
         android:dataExtractionRules="@xml/veri_aktarimi" android:fullBackupContent="@xml/yedek_yok"
         android:icon="@mipmap/ic_launcher" android:banner="@drawable/banner">
-        <activity android:name=".AyarActivity" android:label="Türkçe TV" android:exported="true"
+        <activity android:name=".AyarActivity" android:label="Tv Türkçe Altyazı" android:exported="true"
             android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

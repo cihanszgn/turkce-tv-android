@@ -99,7 +99,7 @@ class AyarActivity : Activity() {
             gravity = Gravity.CENTER
             setPadding(dp(PAD_X_DP), dp(PAD_Y_DP), dp(PAD_X_DP), dp(PAD_Y_DP))
             setBackgroundColor(SCREEN_BACKGROUND)
-            addView(label("Türkçe TV", 34f))
+            addView(label("Tv Türkçe Altyazı", 34f))
             addView(label("Oyun, film ve dizi altyazısı Türkçe", 18f).apply { setTextColor(SCREEN_DIM_TEXT) })
             addView(phone, centered())
             addView(state, centered())
@@ -181,7 +181,7 @@ class AyarActivity : Activity() {
     private fun overlayGuide() =
         "Bu TV izin ekranını açmadı. Kumandayla şuraya git:\n" +
             "Ayarlar > Uygulamalar > Özel uygulama erişimi > Diğer uygulamaların üzerinde göster\n" +
-            "ve Türkçe TV'yi aç.\n" +
+            "ve Tv Türkçe Altyazı uygulamasını aç.\n" +
             "Bu menü yoksa bilgisayardan: adb shell appops set $packageName SYSTEM_ALERT_WINDOW allow"
 
     private fun refresh() {

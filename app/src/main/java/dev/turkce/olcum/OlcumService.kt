@@ -105,12 +105,12 @@ class OlcumService : Service() {
      */
     private fun goForeground(stage: String, demo: Boolean): Boolean {
         val manager = getSystemService(NotificationManager::class.java)
-        manager.createNotificationChannel(NotificationChannel(CHANNEL, "Türkçe TV çeviri", NotificationManager.IMPORTANCE_LOW))
+        manager.createNotificationChannel(NotificationChannel(CHANNEL, "Tv Türkçe Altyazı çeviri", NotificationManager.IMPORTANCE_LOW))
         val open = PendingIntent.getActivity(this, 0, Intent(this, AyarActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
         val title = when {
-            demo -> "Türkçe TV deneme modu açık"
-            stage == PRODUCT_STAGE -> "Türkçe TV çeviri açık"
-            else -> "Türkçe TV ölçüm: $stage"
+            demo -> "Tv Türkçe Altyazı deneme modu açık"
+            stage == PRODUCT_STAGE -> "Tv Türkçe Altyazı çeviri açık"
+            else -> "Tv Türkçe Altyazı ölçüm: $stage"
         }
         val notification = Notification.Builder(this, CHANNEL)
             .setContentTitle(title)

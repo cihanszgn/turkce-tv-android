@@ -1,6 +1,6 @@
-# Türkçe TV (Android TV / Google TV)
+# Tv Türkçe Altyazı (Android TV / Google TV)
 
-Türkçe TV, televizyonda çalışan bir altyazı çevirmenidir. Kendi oyun konsoluna ev ağından uzaktan oynatma bağlantısıyla bağlanır, oyun görüntüsündeki İngilizce altyazıyı okur, cihazın içinde Türkçeye çevirir ve oyunun üstünde gösterir. Okuma ve çeviri televizyonda yapılır; geliştiricinin sunucusu yoktur.
+Tv Türkçe Altyazı, televizyonda çalışan bir altyazı çevirmenidir. Kendi oyun konsoluna ev ağından uzaktan oynatma bağlantısıyla bağlanır, oyun görüntüsündeki İngilizce altyazıyı okur, cihazın içinde Türkçeye çevirir ve oyunun üstünde gösterir. Okuma ve çeviri televizyonda yapılır; geliştiricinin sunucusu yoktur.
 
 Bu depo, Google Play'de dağıtılan uygulamanın kaynak kodudur. Her mağaza sürümü burada aynı adla etiketlenir (ör. `v1.0.0`).
 
@@ -38,9 +38,9 @@ Gerekenler: JDK 17, Android SDK (platform 36, build-tools 35+), Android NDK r28,
 
 ---
 
-# Türkçe TV (English)
+# Tv Türkçe Altyazı (English)
 
-Türkçe TV is a subtitle translator that runs on an Android TV or Google TV device. It connects to your own game console over the home network with a remote play link, reads the English subtitles in the game picture, translates them to Turkish on the device and shows them over the game. Reading and translation happen on the TV; the developer runs no server.
+Tv Türkçe Altyazı is a subtitle translator that runs on an Android TV or Google TV device. It connects to your own game console over the home network with a remote play link, reads the English subtitles in the game picture, translates them to Turkish on the device and shows them over the game. Reading and translation happen on the TV; the developer runs no server.
 
 This repository is the source code of the app distributed on Google Play. Each store release is tagged here with the same name (for example `v1.0.0`).
 

@@ -20,13 +20,13 @@ private const val LINES_PER_PART = 20
  * Play services, and the AGPL-3.0 text from chiaki-ng.
  */
 internal object About {
-    const val NAME = "Türkçe TV"
-    const val DESCRIPTION = "Türkçe TV, PlayStation 5 oyunlarındaki İngilizce altyazıyı ekrandan okur ve Türkçesini " +
+    const val NAME = "Tv Türkçe Altyazı"
+    const val DESCRIPTION = "Tv Türkçe Altyazı, PlayStation 5 oyunlarındaki İngilizce altyazıyı ekrandan okur ve Türkçesini " +
         "görüntünün üstünde gösterir. Okuma da çeviri de bu TV'nin içinde yapılır."
     const val PRIVACY = "Oyun görüntüsü ve altyazı metni yalnız bu TV'de işlenir; internete gönderilmez, saklanmaz. " +
         "Tek istisna: telefondan altyazı yerini ayarlarken istediğin son kare, telefonda gösterilmek için TV'de tutulur. " +
         "Geliştiricinin sunucusu yoktur; uygulama geliştiriciye hiçbir bilgi göndermez."
-    const val LICENSE = "Türkçe TV özgür yazılımdır: GNU Affero Genel Kamu Lisansı sürüm 3 (AGPL-3.0) koşullarıyla " +
+    const val LICENSE = "Tv Türkçe Altyazı özgür yazılımdır: GNU Affero Genel Kamu Lisansı sürüm 3 (AGPL-3.0) koşullarıyla " +
         "kullanabilir, değiştirebilir ve dağıtabilirsin. Program hiçbir garanti olmadan sunulur. Kaynak kodu " +
         "yukarıdaki adreste; lisansın tam metni «Tam lisans metinleri» içinde."
     const val THIRD_PARTY_NOTE = "Uygulamanın içindeki başka yazılımlar kendi lisanslarıyla gelir. Google ML Kit (metin " +

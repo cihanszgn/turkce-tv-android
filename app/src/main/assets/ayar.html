@@ -3,50 +3,58 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>Türkçe TV ayarları</title>
+<title>Tv Türkçe Altyazı ayarları</title>
 <style>
   :root { --bg:#0c1218; --panel:#151f29; --panel2:#1c2935; --line:#273746; --text:#eef2f6; --dim:#93a4b5;
     --accent:#ffd84d; --ok:#5ee08a; --warn:#ffb36b; --err:#ff7a7a; --sub:#50c8ff; --box:#ff9650; }
   * { box-sizing:border-box; }
+  [hidden] { display:none !important; }
   html { -webkit-text-size-adjust:100%; }
   body { margin:0; background:var(--bg); color:var(--text); font:16px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
   main { max-width:760px; margin:0 auto; padding:0 16px 24px; }
-  .ust { position:sticky; top:0; z-index:5; display:flex; align-items:center; justify-content:space-between; gap:12px;
-    margin:0 -16px; padding:12px 16px; background:rgba(12,18,24,.94); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); border-bottom:1px solid var(--line); }
+  .ust { position:sticky; top:0; z-index:5; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 12px;
+    margin:0 -16px; padding:10px 16px; background:rgba(12,18,24,.94); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); border-bottom:1px solid var(--line); }
   .marka { display:flex; align-items:center; gap:10px; min-width:0; }
   .logo { flex:none; width:38px; height:38px; border-radius:10px; display:grid; place-items:center; font-weight:800; font-size:15px;
     color:#1a1400; background:linear-gradient(135deg, #ffe680, var(--accent) 55%, #f0b400); }
   h1 { font-size:19px; margin:0; line-height:1.1; }
-  .alt { font-size:12px; color:var(--dim); }
-  #durum { flex:0 1 auto; max-width:55%; font-size:13px; color:var(--dim); padding:5px 10px; border-radius:999px; background:var(--panel2);
+  .alt { font-size:16px; color:var(--dim); }
+  #durum { flex:0 1 auto; max-width:100%; margin-left:auto; font-size:16px; color:var(--dim); padding:5px 12px; border-radius:999px; background:var(--panel2);
     border:1px solid var(--line); text-align:right; overflow-wrap:anywhere; }
-  #durum.hata { color:var(--err); border-color:rgba(255,122,122,.5); }
+  #durum.hata { color:#ffb0b0; border-color:rgba(255,122,122,.6); border-radius:12px; text-align:left; }
   .kart { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px; margin:14px 0; }
   .kart.aktif { border-color:var(--accent); }
   h2 { display:flex; align-items:center; gap:10px; font-size:17px; margin:0 0 12px; }
   h2 .ikon { flex:none; width:30px; height:30px; border-radius:9px; display:grid; place-items:center; font-size:15px; background:var(--panel2); }
   .kart > b { display:block; }
   .kart a { color:var(--sub); word-break:break-all; }
+  .kart .kart a:not(.bagis) { display:inline-block; padding:10px 0; }
   summary { cursor:pointer; }
   .satir { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:10px 0; }
-  .satir label { flex:1 1 140px; color:var(--dim); font-size:14px; }
+  .satir label { flex:1 1 140px; color:var(--dim); font-size:16px; }
   button, select, input[type=text], input[type=url], .dugme { font:inherit; color:var(--text); background:var(--panel2); border:1px solid var(--line);
     border-radius:10px; padding:10px 14px; min-height:44px; }
-  button, .dugme { cursor:pointer; font-weight:600; }
-  button:active, .dugme:active { filter:brightness(1.25); }
+  button, .dugme { cursor:pointer; font-weight:600; -webkit-tap-highlight-color:transparent; transition:transform .08s, filter .08s; }
+  /* Pressed look; iOS shows it because the page listens to touchstart. */
+  button:not(:disabled):active, .dugme:active { filter:brightness(1.3); transform:scale(.96); }
   button:disabled { opacity:.4; cursor:default; }
+  button.calisiyor:disabled { opacity:1; cursor:progress; }
+  button.calisiyor::before { content:""; display:inline-block; width:.95em; height:.95em; margin-right:8px; vertical-align:-2px;
+    border:3px solid currentColor; border-right-color:transparent; border-radius:50%; animation:don .8s linear infinite; }
+  @keyframes don { to { transform:rotate(360deg); } }
   .ana { background:var(--accent); border-color:var(--accent); color:#1a1400; }
   .tehlike { color:var(--err); border-color:rgba(255,122,122,.45); background:transparent; }
   .dugme { display:inline-flex; align-items:center; text-decoration:none; }
   .kart a.dugme.ana { color:#1a1400; word-break:normal; }
   input[type=text], input[type=url] { flex:1 1 160px; min-width:0; }
+  input[type=file] { font:inherit; max-width:100%; min-height:44px; }
   input:focus, select:focus, button:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
-  input[type=range] { flex:2 1 160px; accent-color:var(--accent); }
-  input[type=color] { width:56px; height:40px; border:1px solid var(--line); border-radius:10px; background:none; padding:2px; }
-  input[type=checkbox] { flex:none; width:22px; height:22px; accent-color:var(--accent); margin:0 8px 0 0; }
-  .satir label.secenek { display:flex; align-items:flex-start; color:var(--text); font-size:15px; }
+  input[type=range] { flex:2 1 100px; min-width:0; accent-color:var(--accent); min-height:44px; }
+  input[type=color] { width:56px; height:44px; border:1px solid var(--line); border-radius:10px; background:none; padding:2px; }
+  input[type=checkbox] { flex:none; width:24px; height:24px; accent-color:var(--accent); margin:0 10px 0 0; }
+  .satir label.secenek { display:flex; align-items:flex-start; color:var(--text); font-size:16px; }
   output { min-width:44px; text-align:right; color:var(--dim); }
-  .not { color:var(--dim); font-size:13.5px; margin:6px 0; }
+  .not { color:var(--dim); font-size:16px; margin:6px 0; }
   .buyuk { font-size:18px; font-weight:700; }
   #ceviriDurum { padding:12px 14px; border-radius:10px; background:var(--panel2); }
   .dugmeler button { flex:1 1 90px; }
@@ -59,43 +67,106 @@
   .alan.secili .tutamak { display:block; }
   .alan.turkce { border:2px dashed #6ee07a; background:rgba(110,224,122,.15); }
   .alan.turkce .tutamak { display:block; background:#6ee07a; }
-  .renkler { display:flex; flex-wrap:wrap; gap:6px 14px; font-size:12.5px; color:var(--dim); margin:8px 0; }
-  .renkler i { display:inline-block; width:12px; height:12px; border-radius:3px; margin-right:5px; vertical-align:-1px; }
+  .renkler { display:flex; flex-wrap:wrap; gap:6px 14px; font-size:16px; color:var(--dim); margin:8px 0; }
+  .renkler i { display:inline-block; width:14px; height:14px; border-radius:3px; margin-right:6px; vertical-align:-1px; }
   #ornek { margin:14px 0 0; padding:22px 12px; border-radius:10px; background:linear-gradient(160deg, #3c4f3c, #24302a); text-align:center; }
   #ornek span { display:inline-block; padding:10px 24px; border-radius:6px; }
+  .bilgi { margin:8px 0; padding:10px 12px; border-radius:10px; background:rgba(255,216,77,.08); border:1px solid rgba(255,216,77,.35); font-size:16px; }
+  .bilgi b { color:var(--accent); }
+  .yol { display:block; margin:6px 0; padding:8px 10px; border-radius:8px; background:var(--bg); font-size:16px; }
+  .ic { margin:8px 0 0; }
+  .ic > summary { color:var(--dim); font-size:16px; padding:11px 0; }
+  .guvenlik { list-style:none; padding:0; margin:0; }
+  .guvenlik li { margin:8px 0; font-size:16px; }
+  .uyari { color:var(--warn); }
+  .etiket { display:inline-block; font-size:16px; padding:1px 8px; border-radius:4px; background:#2b5a35; margin-right:6px; }
+  .tesekkur { margin:4px 0; font-style:italic; }
+  .kart a.bagis { display:inline-flex; align-items:center; min-height:44px; padding:8px 14px; border-radius:8px; background:#7a4b12; color:#fff; text-decoration:none; margin-right:10px; word-break:normal; }
+  .dosya { display:flex; gap:8px; align-items:center; justify-content:space-between; padding:8px 0; border-top:1px solid var(--line); font-size:16px; word-break:break-all; }
+  .kart .kart { background:var(--panel2); }
+  footer { text-align:center; color:var(--dim); font-size:16px; padding:18px 0 28px; letter-spacing:.02em; }
+  footer b { color:var(--text); font-weight:600; }
+  footer a { display:inline-block; padding:12px 8px; }
+
+  /* What a button did, right under it: green done, red with what to do. */
+  .sonuc { margin:8px 0; padding:10px 12px; border-radius:10px; font-size:16px; line-height:1.4; overflow-wrap:anywhere; }
+  .sonuc.iyi { color:#c4f7d5; background:rgba(94,224,138,.12); border:1px solid rgba(94,224,138,.55); }
+  .sonuc.kotu { color:#ffd6d6; background:rgba(255,122,122,.15); border:1px solid rgba(255,122,122,.65); }
+  .sonuc.bilgi-son { color:var(--text); background:rgba(80,200,255,.1); border:1px solid rgba(80,200,255,.5); }
+
+  /* PS5 setup: four step cards with a tick each, then "Hazır". */
   #ps5Ozet { display:flex; flex-wrap:wrap; align-items:center; gap:10px; padding:12px 14px; border-radius:10px; background:var(--panel2); border-left:4px solid var(--warn); }
   #ps5Ozet.ok { border-left-color:var(--ok); }
-  #sihirbaz { margin-top:12px; }
-  #sihirbaz > summary { font-weight:700; padding:10px 0; }
-  .adimlar { list-style:none; counter-reset:adim; padding:0; margin:12px 0 0; }
-  .adimlar > li { counter-increment:adim; position:relative; padding:0 0 22px 46px; }
-  .adimlar > li::before { content:counter(adim); position:absolute; left:0; top:0; width:32px; height:32px; border-radius:50%; display:grid; place-items:center;
-    font-weight:800; background:var(--panel2); border:2px solid var(--line); }
-  .adimlar > li:not(:last-child)::after { content:""; position:absolute; left:15px; top:38px; bottom:4px; width:2px; background:var(--line); }
-  .adimlar > li.tamam::before { content:"✓"; background:var(--ok); border-color:var(--ok); color:#0c1218; }
-  .adimlar > li > b { display:block; font-size:16.5px; margin:4px 0 6px; }
-  .bilgi { margin:8px 0; padding:10px 12px; border-radius:10px; background:rgba(255,216,77,.08); border:1px solid rgba(255,216,77,.35); font-size:14px; }
-  .bilgi b { color:var(--accent); }
-  .yol { display:block; margin:6px 0; padding:8px 10px; border-radius:8px; background:var(--panel2); font-size:13.5px; }
-  .ic { margin:8px 0 0; }
-  .ic > summary { color:var(--dim); font-size:13.5px; padding:6px 0; }
-  .guvenlik { list-style:none; padding:0; margin:0; }
-  .guvenlik li { margin:8px 0; font-size:14px; }
-  .uyari { color:var(--warn); }
-  .etiket { display:inline-block; font-size:12px; padding:1px 6px; border-radius:4px; background:#2b5a35; margin-right:6px; }
-  .tesekkur { margin:4px 0; font-style:italic; }
-  .kart a.bagis { display:inline-block; padding:6px 12px; border-radius:8px; background:#7a4b12; color:#fff; text-decoration:none; margin-right:10px; word-break:normal; }
-  .dosya { display:flex; gap:8px; align-items:center; justify-content:space-between; padding:8px 0; border-top:1px solid var(--line); font-size:14px; word-break:break-all; }
-  .kart .kart { background:var(--panel2); }
-  footer { text-align:center; color:var(--dim); font-size:13px; padding:18px 0 28px; letter-spacing:.02em; }
-  footer b { color:var(--text); font-weight:600; }
+  #ilerleme { margin:14px 0 4px; }
+  #ilerlemeYazi { font-weight:700; font-size:17px; }
+  .cubuk { display:flex; gap:6px; margin:8px 0 0; }
+  .cubuk i { flex:1; height:10px; border-radius:5px; background:var(--line); }
+  .cubuk i.dolu { background:var(--ok); }
+  .adimlar { list-style:none; padding:0; margin:12px 0 0; }
+  .adim { margin:0 0 12px; border:1px solid var(--line); border-radius:12px; background:var(--panel2); scroll-margin-top:120px; }
+  .adim.tamam { border-color:rgba(94,224,138,.55); }
+  .adim.sira { border:2px solid var(--accent); box-shadow:0 0 0 3px rgba(255,216,77,.15); }
+  button.adim-bas { display:flex; align-items:center; gap:12px; width:100%; min-height:60px; padding:10px 12px; text-align:left;
+    background:none; border:0; border-radius:12px; color:var(--text); font-weight:400; }
+  button.adim-bas:not(:disabled):active { transform:none; filter:none; background:rgba(255,255,255,.05); }
+  .no { flex:none; width:38px; height:38px; border-radius:50%; display:grid; place-items:center; font-weight:800; font-size:19px; background:var(--bg); border:2px solid var(--line); }
+  .adim.sira .no { border-color:var(--accent); color:var(--accent); }
+  .adim.tamam .no { background:var(--ok); border-color:var(--ok); color:#0c1218; }
+  .adim-baslik { flex:1; min-width:0; }
+  .adim-baslik b { display:block; font-size:18px; line-height:1.3; }
+  .adim-ozet { display:block; font-size:16px; color:var(--dim); }
+  .adim.tamam .adim-ozet { color:var(--ok); }
+  .adim.sira:not(.tamam) .adim-ozet { color:var(--accent); font-weight:600; }
+  .ok-isaret { flex:none; font-size:20px; color:var(--dim); transition:transform .15s; }
+  .adim.acik .ok-isaret { transform:rotate(180deg); }
+  .adim-govde { display:none; padding:0 12px 16px; }
+  .adim.acik .adim-govde { display:block; }
+  .alt-baslik { font-size:17px; margin:18px 0 8px; color:var(--accent); }
+  .yerler { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 10px; }
+  .yer { display:inline-flex; align-items:center; gap:4px; font-size:16px; font-weight:600; padding:3px 10px; border-radius:999px; border:1px solid; white-space:nowrap; }
+  .yer.konsol { color:#a9dcff; border-color:#3b6f96; background:rgba(80,200,255,.1); }
+  .yer.telefon { color:#ffe48a; border-color:#8a7426; background:rgba(255,216,77,.1); }
+  .yer.tv { color:#bff3cd; border-color:#3f7d52; background:rgba(94,224,138,.1); }
+  .yap { margin:10px 0; padding-left:26px; }
+  .yap > li { margin:9px 0; padding-left:4px; }
+  .yap > li::marker { font-weight:800; color:var(--accent); }
+  .yap .yer { margin:0 4px 4px 0; }
+  .anla { margin:12px 0; padding:10px 12px; border-radius:10px; border:1px dashed rgba(94,224,138,.6); }
+  .anla b { color:var(--ok); }
+  figure.cizim { margin:12px 0; }
+  figure.cizim svg { display:block; width:100%; height:auto; border-radius:10px; }
+  figure.cizim figcaption { font-size:16px; color:var(--dim); margin-top:6px; }
+  .dikkat-kutu { margin:2px 0 12px; padding:12px 14px; border-radius:12px; border:2px solid var(--err); background:rgba(255,122,122,.1); }
+  .dikkat-kutu .baslik { display:block; font-size:19px; color:#ffc2c2; margin-bottom:6px; }
+  .dikkat-kutu ul { margin:8px 0 0; padding-left:22px; }
+  .dikkat-kutu li { margin:7px 0; }
+  .onay { display:flex; align-items:flex-start; gap:12px; margin:12px 0; padding:14px; border-radius:12px; border:2px solid var(--accent);
+    background:rgba(255,216,77,.08); font-weight:700; font-size:17px; cursor:pointer; }
+  .onay input[type=checkbox] { width:30px; height:30px; margin:0; }
+  .onay.uyar { border-color:var(--err); animation:salla .45s; }
+  @keyframes salla { 25% { transform:translateX(-6px); } 75% { transform:translateX(6px); } }
+  .kilitli { opacity:.45; }
+  .kilitli a, .kilitli button, .kilitli input, .kilitli summary { pointer-events:none; }
+  .adres { align-items:center; }
+  .onek { font-size:22px; font-weight:700; font-variant-numeric:tabular-nums; }
+  #sonSayi { flex:0 0 96px; width:96px; font-size:22px; font-weight:700; text-align:center; }
+  #ps5Pin { font-size:22px; letter-spacing:.12em; font-variant-numeric:tabular-nums; }
+  button.ps5-sec { display:flex; align-items:center; gap:12px; width:100%; margin:8px 0; padding:12px 14px; text-align:left; font-weight:400; }
+  .ps5-sec b { display:block; font-size:18px; }
+  .ps5-sec .k { color:var(--dim); }
+  .ps5-sec .sec-isaret { margin-left:auto; font-weight:700; color:var(--accent); white-space:nowrap; }
+  button.ps5-sec.secili { border:2px solid var(--ok); }
+  .ps5-sec.secili .sec-isaret { color:var(--ok); }
+  .hazir { margin:14px 0 0; padding:16px; border-radius:14px; border:2px solid var(--ok); background:rgba(94,224,138,.07); scroll-margin-top:120px; }
+  .hazir h3 { margin:0 0 10px; font-size:20px; color:var(--ok); }
+  button.kocaman { width:100%; min-height:64px; font-size:21px; }
 </style>
 </head>
 <body>
 <main>
   <header class="ust">
-    <div class="marka"><span class="logo">TR</span><div><h1>Türkçe TV</h1><div class="alt">Oyun, film ve dizi altyazısı Türkçe</div></div></div>
-    <div id="durum">Yükleniyor…</div>
+    <div class="marka"><span class="logo">TR</span><div><h1>Tv Türkçe Altyazı</h1><div class="alt">Oyun, film ve dizi altyazısı Türkçe</div></div></div>
+    <div id="durum" role="status">Yükleniyor…</div>
   </header>
 
   <section class="kart">
@@ -111,41 +182,233 @@
     <p class="not">Açılış yazıları yine de çevrilirse "Duraklat"a bas, oyun başlayınca "Devam"a bas. Duraklatınca TV'deki yazılar hemen silinir.</p>
   </section>
 
-  <section class="kart">
+  <section class="kart" id="ps5Kart">
     <h2><span class="ikon">🎮</span>PlayStation bağlantısı</h2>
-    <div id="ps5Ozet">…</div>
-    <details id="sihirbaz">
-      <summary>PlayStation ile eşleştir (bir kerelik, yaklaşık 5 dakika)</summary>
-      <ol class="adimlar">
-        <li id="adim1"><b>PlayStation'da Uzaktan Oynatma'yı aç</b>
+    <div id="ps5Ozet" data-sonuc><span id="ps5OzetYazi">…</span><button id="uyandir" hidden>PS5'i uyandır</button></div>
+    <div id="ilerleme">
+      <div id="ilerlemeYazi">4 adımdan 0'ı tamam</div>
+      <div class="cubuk" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    </div>
+    <p class="not">Bir kerelik kurulum, yaklaşık 10 dakika. Telefonu ve PS5 kumandasını yanında tut. Biten adımın numarası yeşil ✓ olur ve adım kapanır; sıradaki adım sarı çerçeveyle açılır. Bir adımın başlığına dokunarak onu açıp kapatabilirsin.</p>
+
+    <ol class="adimlar">
+      <li class="adim sira acik" id="adim1">
+        <button type="button" class="adim-bas" aria-expanded="true" aria-controls="adim1g"><span class="no">1</span><span class="adim-baslik"><b>PS5'te Uzaktan Oynatma'yı aç</b><span class="adim-ozet">Sıradaki adım</span></span><span class="ok-isaret" aria-hidden="true">▾</span></button>
+        <div class="adim-govde" id="adim1g">
+          <div class="yerler"><span class="yer konsol">🎮 Konsolda</span></div>
+          <ol class="yap">
+            <li>PS5'i aç, ana ekrana gel.</li>
+            <li>Ana ekranın sağ üst köşesindeki <b>Ayarlar</b> simgesine (dişli çark) gir.</li>
+            <li><b>Sistem</b>'i, sonra <b>Uzaktan Oynatma</b>'yı seç.</li>
+            <li><b>Uzaktan Oynatmayı Etkinleştir</b> düğmesini aç.</li>
+            <li>Telefona dön, aşağıdaki <b>Yaptım</b> düğmesine bas.</li>
+          </ol>
           <span class="yol">PS5: Ayarlar → Sistem → Uzaktan Oynatma → Uzaktan Oynatmayı Etkinleştir</span>
           <div class="not">İngilizce menüde: Settings → System → Remote Play → Enable Remote Play.</div>
-          <details class="ic"><summary>PlayStation'ı TV'den uyandırmak istersen</summary>
+          <figure class="cizim">
+            <svg viewBox="0 0 300 172" role="img" aria-label="Temsili çizim: Uzaktan Oynatma ayarında açık duran Etkinleştir düğmesi">
+              <rect x="2" y="2" width="296" height="168" rx="10" fill="#0f151c" stroke="#3a4b5c" stroke-width="3"/>
+              <text x="16" y="30" fill="#93a4b5" font-size="14">Ayarlar › Sistem › Uzaktan Oynatma</text>
+              <rect x="14" y="44" width="272" height="56" rx="8" fill="#1c2935" stroke="#ffd84d" stroke-width="3"/>
+              <text x="26" y="68" fill="#eef2f6" font-size="15">Uzaktan Oynatmayı</text>
+              <text x="26" y="88" fill="#eef2f6" font-size="15">Etkinleştir</text>
+              <rect x="220" y="59" width="52" height="26" rx="13" fill="#5ee08a"/>
+              <circle cx="259" cy="72" r="10" fill="#fff"/>
+              <rect x="14" y="110" width="272" height="40" rx="8" fill="#16212b"/>
+              <text x="26" y="135" fill="#6f8091" font-size="14">Cihaz Bağla</text>
+              <text x="246" y="164" text-anchor="middle" fill="#ffd84d" font-size="13" font-weight="700">↑ açık</text>
+            </svg>
+            <figcaption>Temsili çizim, gerçek ekran değil. Sarı çerçeveli satırdaki düğme açık olmalı.</figcaption>
+          </figure>
+          <div class="anla"><b>Bittiğini nasıl anlarsın:</b> PS5'te düğme açık görünür. "Yaptım"a basınca bu adımın numarası yeşil ✓ olur ve 2. adım açılır.</div>
+          <details class="ic"><summary>PS5'i TV'den uyandırmak istersen (isteğe bağlı)</summary>
             <span class="yol">PS5: Ayarlar → Sistem → Güç Tasarrufu → Dinlenme Modunda Kullanılabilen Özellikler → "İnternete Bağlı Kal" ve "Ağ Üzerinden PS5'i Açmayı Etkinleştir"</span>
           </details>
-          <div class="not">Menü yolları PS5 içindir; dile göre adlar biraz farklı olabilir. PlayStation ve TV aynı modeme bağlı olmalı.</div></li>
-        <li id="adim2"><b>Yansıtma için PSN hesabı bağla</b>
-          <div class="bilgi"><b>Yeni bir PSN hesabı aç</b> ve PlayStation'a kullanıcı olarak ekle. Bu hesap <b>yalnız PlayStation ekranını TV'ye yansıtmak</b> için kullanılır: oyun oynamaz, satın alma yapmaz. Asıl hesabın bu uygulamaya hiç bağlanmaz.</div>
-          <div class="not">Düğme Sony'nin kendi giriş sayfasını açar. Yeni hesabınla gir; şifreni yalnız orada yaz, bu sayfa ve TV şifreni hiç görmez.</div>
-          <div class="satir"><a id="psnGiris" class="dugme ana" target="_blank" rel="noopener noreferrer" href="#">Sony'de giriş yap ↗</a></div>
-          <div class="not">Girişten sonra boş ya da hata yazan bir sayfa açılır; bu normal. O sayfanın <b>adres çubuğundaki adresi</b> kopyala (içinde "code=" geçer), aşağıya yapıştır. Kod birkaç dakika geçerli.</div>
-          <div class="satir"><input id="psnAdres" type="text" maxlength="2000" placeholder="https://remoteplay.dl.playstation.net/...?code=..." autocomplete="off"><button id="psnBagla" class="ana">Hesabı bağla</button></div>
-          <details class="ic"><summary>Hesap kimliğimi biliyorum</summary>
-            <div class="satir"><input id="psnKimlik" type="text" maxlength="20" placeholder="ör. AbCdEfGhIjk=" autocomplete="off"><button id="kimlikKaydet">Kaydet</button></div>
-          </details></li>
-        <li id="adim3"><b>PlayStation'ı bul</b>
-          <div class="not">PlayStation açık olsun. Bulunamazsa PlayStation'da Ayarlar → Ağ → Bağlantı Durumu'ndaki IP adresini yaz.</div>
-          <div class="satir"><button id="ps5Bul">PlayStation'ı ara</button><input id="ps5Ip" type="text" inputmode="decimal" maxlength="15" placeholder="192.168.1.x"></div>
-          <div id="bulunan"></div></li>
-        <li id="adim4"><b>PlayStation'ın verdiği kodu yaz</b>
-          <div class="not">PlayStation'da <b>yeni açtığın kullanıcıyla</b> girmişken:</div>
+          <div class="not">Menü adları dile göre biraz farklı olabilir. PS5 ve TV aynı modeme bağlı olmalı.</div>
+          <div class="satir" data-sonuc><button id="yaptim" class="ana">Yaptım, Uzaktan Oynatma açık</button><button id="yaptimGeri" hidden>Henüz yapmadım, geri al</button></div>
+        </div>
+      </li>
+
+      <li class="adim" id="adim2">
+        <button type="button" class="adim-bas" aria-expanded="false" aria-controls="adim2g"><span class="no">2</span><span class="adim-baslik"><b>Uzaktan oynatma için AYRI bir PSN hesabı aç ve bağla</b><span class="adim-ozet"></span></span><span class="ok-isaret" aria-hidden="true">▾</span></button>
+        <div class="adim-govde" id="adim2g">
+          <div class="dikkat-kutu" role="note">
+            <b class="baslik">⚠ Ana hesabını burada kullanma</b>
+            Bu adım için <b>yeni, ayrı ve ücretsiz</b> bir PSN hesabı aç. Oyunlarını oynadığın hesabın e-postasını ve şifresini bu adımda <b>hiçbir yere yazma</b>.
+            <ul>
+              <li><b>Neden?</b> Bu bağlantı Sony'nin resmî uygulaması değil; Sony bunu kurallarına aykırı sayabilir. Bir sorun çıkarsa ana hesabın değil, bu yeni hesap etkilenir.</li>
+              <li>Sen PS5'te yine <b>ana hesabınla</b> oynarsın; yeni hesap yalnız görüntüyü TV'deki uygulamaya aktarır. Denemede ana hesapla oyun oynanırken TV yeni hesabı kullandı, oyun kesilmedi.</li>
+              <li>Yeni hesap oyun oynamaz, satın alma yapmaz: ona ödeme kartı ekleme.</li>
+            </ul>
+          </div>
+          <div id="hesapAdimlari">
+            <div class="yerler"><span class="yer konsol">🎮 Konsolda</span><span class="yer telefon">📱 Telefonda</span></div>
+            <h3 class="alt-baslik">A. Yeni hesabı aç ve PS5'e ekle</h3>
+            <ol class="yap">
+              <li>PS5 kumandasında <b>PS tuşuna</b> bas. Açılan menüde profil resmine gir, kullanıcı değiştirmeyi seç.</li>
+              <li>Kullanıcı seçme ekranında <b>"+"</b> kutusunu (kullanıcı ekle) seç.</li>
+              <li>Yeni hesap oluşturmayı seç. Sony'de <b>hiç kullanmadığın bir e-posta adresi</b> yaz; yoksa önce telefondan yeni bir e-posta adresi aç.</li>
+              <li>Adımları bitir, yeni hesapla PS5'e bir kez gir. Sonra ana kullanıcına dönebilirsin.</li>
+            </ol>
+            <figure class="cizim">
+              <svg viewBox="0 0 300 150" role="img" aria-label="Temsili çizim: kullanıcı seçme ekranında ana hesap ve yeni kullanıcı ekleme kutusu">
+                <rect x="2" y="2" width="296" height="146" rx="10" fill="#0f151c" stroke="#3a4b5c" stroke-width="3"/>
+                <circle cx="90" cy="64" r="28" fill="#3b6f96"/>
+                <circle cx="90" cy="56" r="9" fill="#cfe9ff"/>
+                <path d="M73 80a17 13 0 0 1 34 0z" fill="#cfe9ff"/>
+                <text x="90" y="118" text-anchor="middle" fill="#eef2f6" font-size="15">Ana hesabın</text>
+                <circle cx="210" cy="64" r="28" fill="none" stroke="#ffd84d" stroke-width="3" stroke-dasharray="7 5"/>
+                <text x="210" y="75" text-anchor="middle" fill="#ffd84d" font-size="32" font-weight="700">+</text>
+                <text x="210" y="118" text-anchor="middle" fill="#ffd84d" font-size="15" font-weight="700">yeni kullanıcı</text>
+              </svg>
+              <figcaption>Temsili çizim, gerçek ekran değil: PS5'in kullanıcı seçme ekranı. Sarı "+" kutusu yeni kullanıcı ekler.</figcaption>
+            </figure>
+            <div class="not">Başka yol: hesabı telefondan Sony'nin sitesinde aç, sonra PS5'te "+" kutusundan o hesapla gir.</div>
+            <div class="anla"><b>Bittiğini nasıl anlarsın:</b> PS5'in kullanıcı seçme ekranında ana hesabının yanında yeni hesabın da görünür.</div>
+
+            <h3 class="alt-baslik">B. Yeni hesabı bu TV'ye bağla</h3>
+            <label class="onay" id="onayEtiket"><input type="checkbox" id="ayriHesap"><span>Yeni, ayrı bir hesap açtım; ana hesabımı girmeyeceğim</span></label>
+            <ol class="yap">
+              <li><b>Sony'de giriş yap</b> düğmesine bas; Sony'nin kendi giriş sayfası yeni sekmede açılır.</li>
+              <li><b>Yeni hesabın</b> e-postası ve şifresiyle gir. Şifreni yalnız orada yaz; bu sayfa ve TV şifreni hiç görmez.</li>
+              <li>Girişten sonra boş ya da hata yazan bir sayfa açılır; <b>bu normal</b>.</li>
+              <li>O sayfanın <b>adres çubuğundaki adresin tamamını</b> kopyala (içinde "code=" geçer): adres çubuğuna dokun, adresin tamamını seç, Kopyala'ya bas.</li>
+              <li>Bu sekmeye dön, adresi aşağıdaki kutuya yapıştır ve <b>Hesabı bağla</b>'ya bas. Kod birkaç dakika geçerli; beklemeden yap.</li>
+            </ol>
+            <figure class="cizim">
+              <svg viewBox="0 0 300 170" role="img" aria-label="Temsili çizim: girişten sonra açılan boş sayfa ve kopyalanacak adres çubuğu">
+                <rect x="2" y="2" width="296" height="166" rx="12" fill="#f4f6f8" stroke="#3a4b5c" stroke-width="3"/>
+                <path d="M3 14a11 11 0 0 1 11-11h272a11 11 0 0 1 11 11v40H3z" fill="#dfe5eb"/>
+                <rect x="12" y="12" width="276" height="34" rx="17" fill="#fff" stroke="#e0a800" stroke-width="3"/>
+                <text x="26" y="34" fill="#1a2430" font-size="14">…playstation.net/…?code=Ab12…</text>
+                <path d="M200 52l8-8 8 8z" fill="#1a2430"/>
+                <rect x="160" y="52" width="96" height="34" rx="8" fill="#1a2430"/>
+                <text x="208" y="74" text-anchor="middle" fill="#fff" font-size="15" font-weight="700">Kopyala</text>
+                <text x="150" y="122" text-anchor="middle" fill="#55616d" font-size="15">Boş sayfa ya da hata yazısı</text>
+                <text x="150" y="144" text-anchor="middle" fill="#55616d" font-size="15">(bu normal)</text>
+              </svg>
+              <figcaption>Temsili çizim, gerçek ekran değil. Kopyalanacak olan, en üstteki adres çubuğundaki adresin tamamı.</figcaption>
+            </figure>
+            <div id="hesapDugmeler" class="kilitli">
+              <p id="kilitNot" class="not">Düğmeler, yukarıdaki sarı kutuyu işaretleyince açılır.</p>
+              <div class="satir"><a id="psnGiris" class="dugme ana" target="_blank" rel="noopener noreferrer" href="#">Sony'de giriş yap ↗</a></div>
+              <div class="satir" data-sonuc><input id="psnAdres" type="text" maxlength="2000" placeholder="https://remoteplay.dl.playstation.net/...?code=..." autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Girişten sonra açılan sayfanın adresi"><button id="psnBagla" class="ana">Hesabı bağla</button></div>
+              <details class="ic"><summary>Hesap kimliğimi biliyorum</summary>
+                <div class="satir" data-sonuc><input id="psnKimlik" type="text" maxlength="20" placeholder="ör. AbCdEfGhIjk=" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Hesap kimliği"><button id="kimlikKaydet">Kaydet</button></div>
+              </details>
+            </div>
+            <div class="anla"><b>Bittiğini nasıl anlarsın:</b> "Hesabı bağla"dan sonra yeşil "bağlandı" yazar ve bu adımın numarası ✓ olur.</div>
+          </div>
+          <div id="hesapTamam" hidden>
+            <div class="sonuc iyi">✓ Yeni hesap bu TV'ye bağlandı.</div>
+            <div class="satir" data-sonuc><button id="hesapDegistir">Hesabı değiştir</button></div>
+            <p class="not">Yanlış hesabı (ör. ana hesabını) bağladıysan "Hesabı değiştir"e bas: bağlı hesap TV'den silinir, yeni hesabı yeniden bağlarsın.</p>
+          </div>
+        </div>
+      </li>
+
+      <li class="adim" id="adim3">
+        <button type="button" class="adim-bas" aria-expanded="false" aria-controls="adim3g"><span class="no">3</span><span class="adim-baslik"><b>PS5'i bul</b><span class="adim-ozet"></span></span><span class="ok-isaret" aria-hidden="true">▾</span></button>
+        <div class="adim-govde" id="adim3g">
+          <div class="yerler"><span class="yer telefon">📱 Telefonda</span></div>
+          <ol class="yap">
+            <li>PS5 açık olsun ve TV ile <b>aynı modeme</b> bağlı olsun.</li>
+            <li>Aşağıdaki <b>PS5'i ara</b> düğmesine bas.</li>
+            <li>Çıkan listede kendi PS5'ine dokun. Evde tek PS5 varsa kendiliğinden seçilir.</li>
+          </ol>
+          <div class="satir"><button id="ps5Bul" class="ana">PS5'i ara</button></div>
+          <div id="bulunan" data-sonuc></div>
+          <div id="seciliAdres" class="sonuc iyi" hidden></div>
+          <div class="anla"><b>Bittiğini nasıl anlarsın:</b> PS5'in yanında yeşil "Seçildi" yazar ve bu adımın numarası ✓ olur.</div>
+          <details class="ic" id="elle"><summary>PS5 bulunamazsa: adresini elle yaz</summary>
+            <div class="yerler"><span class="yer konsol">🎮 Konsolda</span><span class="yer telefon">📱 Telefonda</span></div>
+            <ol class="yap">
+              <li>PS5'te <b>Ayarlar → Ağ → Bağlantı Durumu</b>'na gir.</li>
+              <li><b>IP adresi</b> satırını bul (ör. 192.168.1.20).</li>
+              <li>Adresin <b>son sayısını</b> aşağıdaki kutuya yaz, <b>Bu adresi kullan</b>'a bas.</li>
+            </ol>
+            <figure class="cizim">
+              <svg viewBox="0 0 300 166" role="img" aria-label="Temsili çizim: Bağlantı Durumu ekranında IP adresi satırı, son sayı işaretli">
+                <rect x="2" y="2" width="296" height="162" rx="10" fill="#0f151c" stroke="#3a4b5c" stroke-width="3"/>
+                <text x="16" y="30" fill="#93a4b5" font-size="14">Ayarlar › Ağ › Bağlantı Durumu</text>
+                <rect x="14" y="44" width="272" height="34" rx="8" fill="#16212b"/>
+                <rect x="26" y="56" width="92" height="10" rx="5" fill="#2c3b49"/>
+                <rect x="190" y="56" width="84" height="10" rx="5" fill="#2c3b49"/>
+                <rect x="14" y="88" width="272" height="42" rx="8" fill="#1c2935" stroke="#ffd84d" stroke-width="3"/>
+                <text x="26" y="114" fill="#eef2f6" font-size="15">IP adresi</text>
+                <text x="274" y="114" text-anchor="end" fill="#eef2f6" font-size="17" font-weight="700">192.168.1.<tspan fill="#ffd84d">20</tspan></text>
+                <text x="276" y="154" text-anchor="end" fill="#ffd84d" font-size="14" font-weight="700">↑ son sayı</text>
+              </svg>
+              <figcaption>Temsili çizim, gerçek ekran değil. Satırın adı biraz farklı olabilir (ör. "IPv4 adresi"). Sarı olan, yazacağın son sayı.</figcaption>
+            </figure>
+            <div class="satir adres" id="onekSatir" data-sonuc><span class="onek" id="onek"></span><input id="sonSayi" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="20" autocomplete="off" aria-label="PS5 adresinin son sayısı"><button id="sonSayiKaydet" class="ana">Bu adresi kullan</button></div>
+            <p class="not" id="onekNot">Baştaki sayılar TV'nin ev ağından alındı; aynı modemdeki PS5'te de aynıdır. Yalnız son sayıyı yaz.</p>
+            <details class="ic" id="tamAdres"><summary>Adresin başı farklıysa: tamamını yaz</summary>
+              <div class="satir" data-sonuc><input id="ps5Ip" type="text" inputmode="decimal" maxlength="40" placeholder="192.168.1.20" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="PS5'in adresi"><button id="ipKaydet" class="ana">Bu adresi kullan</button></div>
+              <p class="not">Telefon klavyesinde nokta yoksa virgül yaz; kendiliğinden noktaya çevrilir.</p>
+            </details>
+          </details>
+        </div>
+      </li>
+
+      <li class="adim" id="adim4">
+        <button type="button" class="adim-bas" aria-expanded="false" aria-controls="adim4g"><span class="no">4</span><span class="adim-baslik"><b>PS5'ten kodu al, buraya yaz</b><span class="adim-ozet"></span></span><span class="ok-isaret" aria-hidden="true">▾</span></button>
+        <div class="adim-govde" id="adim4g">
+          <div class="yerler"><span class="yer konsol">🎮 Konsolda</span><span class="yer telefon">📱 Telefonda</span></div>
+          <div class="bilgi"><b>Bu adımı PS5'te yeni hesabınla yap.</b> Kod, PS5'te o an açık olan kullanıcıya aittir; ana hesabınla alınan kod işe yaramaz.</div>
+          <ol class="yap">
+            <li>PS5'te <b>yeni kullanıcıya geç</b> (PS tuşu → profil resmi → kullanıcı değiştir).</li>
+            <li><b>Ayarlar → Sistem → Uzaktan Oynatma → Cihaz Bağla</b>'yı seç.</li>
+            <li>Ekranda <b>8 rakamlı bir kod</b> çıkar. O ekranı kapatma; kod birkaç dakika geçerli.</li>
+            <li>Kodu aşağıdaki kutuya yaz, <b>Eşleştir</b>'e bas.</li>
+            <li>"PS5 eşleşti" yazınca PS5'te ana kullanıcına dönebilirsin.</li>
+          </ol>
           <span class="yol">PS5: Ayarlar → Sistem → Uzaktan Oynatma → Cihaz Bağla</span>
-          <div class="not">Ekranda 8 haneli kod çıkar; kod birkaç dakika geçerli.</div>
-          <div class="satir"><input id="ps5Pin" type="text" inputmode="numeric" maxlength="9" placeholder="12345678" autocomplete="off"><button id="eslestir" class="ana">Eşleştir</button></div></li>
-        <li id="adim5"><b>Hazır</b>
-          <div class="not">Yukarıdaki "Başlat" ile çeviriyi aç. Oyuna ya da filme asıl hesabınla, TV'nin PlayStation girişinden devam et.</div></li>
+          <figure class="cizim">
+            <svg viewBox="0 0 300 160" role="img" aria-label="Temsili çizim: Cihaz Bağla ekranında 8 rakamlı kod, açık kullanıcı yeni hesap">
+              <rect x="2" y="2" width="296" height="156" rx="10" fill="#0f151c" stroke="#3a4b5c" stroke-width="3"/>
+              <text x="16" y="30" fill="#93a4b5" font-size="14">… › Uzaktan Oynatma › Cihaz Bağla</text>
+              <rect x="34" y="44" width="232" height="58" rx="10" fill="#1c2935" stroke="#ffd84d" stroke-width="3"/>
+              <text x="150" y="84" text-anchor="middle" fill="#ffd84d" font-size="30" font-weight="800" letter-spacing="3">1234 5678</text>
+              <circle cx="32" cy="130" r="13" fill="#5ee08a"/>
+              <circle cx="32" cy="126" r="5" fill="#0c1218"/>
+              <path d="M24 139a8 6 0 0 1 16 0z" fill="#0c1218"/>
+              <text x="54" y="135" fill="#c4f7d5" font-size="15">Açık kullanıcı: yeni hesap</text>
+            </svg>
+            <figcaption>Temsili çizim, gerçek ekran değil. Rakamlar her seferinde farklıdır.</figcaption>
+          </figure>
+          <div class="not" id="eslesAdres"></div>
+          <div class="satir" data-sonuc><input id="ps5Pin" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="12" placeholder="8 rakamlı kod" autocomplete="off" aria-label="PS5'teki 8 rakamlı kod"><button id="eslestir" class="ana">Eşleştir</button></div>
+          <div class="not" id="pinSay">Yazılan rakam: 0 / 8</div>
+          <div class="anla"><b>Bittiğini nasıl anlarsın:</b> yeşil "PS5 eşleşti" yazar, dört adımın hepsi ✓ olur ve aşağıda "Hazır" bölümü açılır.</div>
+        </div>
+      </li>
+    </ol>
+
+    <div id="hazir" class="hazir" hidden>
+      <h3>✓ Hazır: çeviriyi başlat</h3>
+      <div class="satir" data-sonuc><button id="hazirBaslat" class="ana kocaman">Çeviriyi başlat</button></div>
+      <ol class="yap">
+        <li><span class="yer konsol">🎮 Konsolda</span> PS5'te ana kullanıcına dön (yeni hesaptaysan).</li>
+        <li><span class="yer tv">📺 TV'de</span> TV kumandasındaki <b>giriş / kaynak</b> tuşuna bas, PS5'in takılı olduğu HDMI girişini seç.</li>
+        <li><span class="yer konsol">🎮 Konsolda</span> Oyunun ayarlarında <b>altyazıyı aç</b>, altyazı dilini <b>İngilizce</b> yap.</li>
+        <li>Oynamaya başla. İngilizce altyazının altında Türkçesi çıkar.</li>
       </ol>
-    </details>
+      <figure class="cizim">
+        <svg viewBox="0 0 300 180" role="img" aria-label="Temsili çizim: TV ekranında İngilizce altyazı ve altında Türkçesi">
+          <defs><linearGradient id="gok" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#34506b"/><stop offset="1" stop-color="#1d2a22"/></linearGradient></defs>
+          <rect x="2" y="2" width="296" height="160" rx="8" fill="url(#gok)" stroke="#3a4b5c" stroke-width="3"/>
+          <path d="M3 116L70 78l50 28 70-40 107 48v46H3z" fill="#22311f"/>
+          <text x="150" y="106" text-anchor="middle" fill="#fff" font-size="14">We're heading to town tonight.</text>
+          <rect x="40" y="118" width="220" height="30" rx="4" fill="#000" fill-opacity=".65"/>
+          <text x="150" y="139" text-anchor="middle" fill="#ffd84d" font-size="15" font-weight="700">Bu gece kasabaya gidiyoruz.</text>
+          <rect x="130" y="164" width="40" height="10" rx="2" fill="#3a4b5c"/>
+        </svg>
+        <figcaption>Temsili çizim, gerçek ekran değil: üstte oyunun İngilizce altyazısı, altında Türkçesi. Türkçe yazının rengi ve yeri aşağıdaki "Görünüm" ve "Çeviri alanları" ayarlarından değişir.</figcaption>
+      </figure>
+      <div class="anla"><b>Çalıştığını nasıl anlarsın:</b> İngilizce altyazının altında Türkçe satır görünür ve bu sayfanın en üstündeki Çeviri kartında "● Çeviri açık" yazar.</div>
+      <p class="not">PS5 dinlenme modundaysa yukarıdaki "PS5'i uyandır" düğmesiyle ya da kumandadaki PS tuşuyla aç.</p>
+    </div>
   </section>
 
   <section class="kart">
@@ -156,13 +419,13 @@
     <div class="satir"><label class="secenek"><input id="turkceYer" type="checkbox">Türkçe altyazının yerini kendim seçeceğim</label></div>
     <p class="not">İşaretlemezsen Türkçe yazı oyunun altyazısının biraz altına çıkar. İşaretlersen yeşil kutuyu istediğin yere sürükle; yazı kutunun alt kenarına oturur ve TV'de hemen örnek bir satır görünür.</p>
     <div class="satir">
-      <select id="secim"></select>
+      <select id="secim" aria-label="Alan"></select>
       <button id="yeni">Yeni alan</button>
       <button id="sil">Sil</button>
     </div>
     <div class="satir">
       <input id="ad" type="text" maxlength="30" placeholder="Alan adı">
-      <select id="tur"><option value="altyazi">Altyazı</option><option value="kutu">Bilgi kutusu</option></select>
+      <select id="tur" aria-label="Alan türü"><option value="altyazi">Altyazı</option><option value="kutu">Bilgi kutusu</option></select>
     </div>
     <div class="satir">
       <button id="varsayilan">Varsayılana döndür</button>
@@ -186,16 +449,17 @@
   <section class="kart">
     <h2><span class="ikon">📦</span>Oyun paketi</h2>
     <p class="not">Bir Türkçe yamanın çevirisini TV'ye yükle: ekranda okunan satır pakette varsa çevirmenin cümlesi gösterilir, yoksa makine çevirisi.</p>
+    <div id="paketSonuc" class="sonuc" role="status" hidden></div>
     <div id="paketler"></div>
     <div class="satir">
-      <input id="oyunAra" type="text" maxlength="80" placeholder="Oyun adı, ör. Red Dead Redemption 2" enterkeyhint="search">
+      <input id="oyunAra" type="text" maxlength="80" placeholder="Oyun adı, ör. Red Dead Redemption 2" enterkeyhint="search" aria-label="Oyun adı">
       <button id="ara" class="ana">Ara</button>
     </div>
     <div id="sonuclar"></div>
     <details class="ic">
       <summary>Telefondaki dosyayı TV'ye yükle</summary>
       <p class="not">Yamayı çevirmenin kendi sitesinden indirdiysen buradan TV'ye gönder. Çevirmenin adını ve varsa bağış sayfasını yaz ki pakette görünsün. TV .po, .tsv, .csv, .txt, .rpy ve .zip okur.</p>
-      <div class="satir"><input id="yukDosya" type="file" accept=".po,.tsv,.csv,.txt,.rpy,.zip"></div>
+      <div class="satir"><input id="yukDosya" type="file" accept=".po,.tsv,.csv,.txt,.rpy,.zip" aria-label="Çeviri dosyası"></div>
       <div class="satir"><input id="yukOyun" type="text" maxlength="60" placeholder="Oyun adı"></div>
       <div class="satir"><input id="yukCevirmen" type="text" maxlength="80" placeholder="Çeviren grup veya kişi"></div>
       <div class="satir"><input id="yukKaynak" type="text" maxlength="300" placeholder="İndirdiğin sayfanın adresi"></div>
@@ -211,7 +475,7 @@
     <p class="not">Bir şeyden şüphelenirsen: bu düğmeye bas, PlayStation'da Uzaktan Oynatma → Bağlı Cihazlar'dan TV'yi kaldır ve yansıtma hesabının şifresini değiştir.</p>
   </section>
 
-  <footer>Türkçe TV · by <b>Cihan Sezgin</b><br><a id="hakkinda" href="#" style="color:var(--sub)">Hakkında ve lisanslar</a></footer>
+  <footer>Tv Türkçe Altyazı · by <b>Cihan Sezgin</b><br><a id="hakkinda" href="#" style="color:var(--sub)">Hakkında ve lisanslar</a></footer>
 </main>
 <script>
 "use strict";
@@ -226,14 +490,24 @@ const token = new URLSearchParams(location.search).get("t") || "";
 const $ = (id) => document.getElementById(id);
 let settings = null, selected = 0, saveTimer = null, stopped = false;
 
+// iOS Safari shows the pressed look (:active) only on pages that listen to touches.
+document.addEventListener("touchstart", function () {}, { passive: true });
+
 function api(path) { return path + (path.includes("?") ? "&" : "?") + "t=" + encodeURIComponent(token); }
 $("hakkinda").href = api("/hakkinda");
 
 function status(text, error) { const d = $("durum"); d.textContent = text; d.className = error ? "hata" : ""; }
 
+// Messages for the person holding the phone: what happened and what to do, never raw system text.
+const EXPIRED = "Bağlantı süresi doldu. TV'deki QR kodu yeniden okut.";
+const UNREACHABLE = "TV'ye ulaşılamadı. Telefon, TV ile aynı Wi-Fi'a bağlı mı? Mobil veriyi kapat, evdeki Wi-Fi'a bağlan, sayfayı yenile. TV'de Tv Türkçe Altyazı açık olmalı.";
+const ODD = "TV beklenmeyen bir cevap verdi. Sayfayı yenileyip tekrar dene.";
+const NO_SETTINGS = "Ayarlar TV'den alınamadı. Sayfayı yenileyip tekrar dene.";
+function late(seconds) { return seconds + " saniyedir TV'den cevap gelmedi. TV açık mı, Tv Türkçe Altyazı uygulaması açık mı? Biraz bekleyip tekrar dene."; }
+
 function expired() {
   stopped = true;
-  status("Bağlantı süresi doldu. TV'deki QR kodu yeniden okut.", true);
+  status(EXPIRED, true);
   document.querySelectorAll("button, select, input").forEach((e) => (e.disabled = true));
 }
 
@@ -245,7 +519,7 @@ async function load() {
     settings = await r.json();
     status("Bağlı");
     render();
-  } catch (e) { status("TV'ye ulaşılamadı. Telefon ve TV aynı ağda mı?", true); }
+  } catch (e) { status(UNREACHABLE, true); }
 }
 
 function scheduleSave() {
@@ -255,23 +529,36 @@ function scheduleSave() {
   saveTimer = setTimeout(save, 400);
 }
 
-async function save() {
+async function save(report) {
   try {
-    const r = await fetch(api("/api/ayar"), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(settings) });
-    if (r.status === 403) return expired();
-    if (!r.ok) throw new Error(r.status);
-    const clean = await r.json();
+    const clean = await postJson("/api/ayar", settings);
     if (!dragging && document.activeElement !== $("ad")) { settings = clean; render(); }
     status("Kaydedildi");
-  } catch (e) { status("Kaydedilemedi, tekrar dene.", true); }
+  } catch (e) {
+    if (!stopped) status("Kaydedilemedi, tekrar dene.", true);
+    if (report === true) throw e;
+  }
 }
 
-function refreshPicture() {
-  if (stopped) return;
-  const img = new Image();
-  img.onload = () => { $("sahne").style.backgroundImage = "url(" + img.src + ")"; };
-  img.src = api("/api/kare.jpg?n=" + Date.now());
+/** Saves at once for a button, so its own result shows next to it. */
+function saveNow(btn, doneText) {
+  if (!settings) return tell(resultFor(btn), false, NO_SETTINGS);
+  clearTimeout(saveTimer);
+  return press(btn, () => save(true), "Kaydediliyor…", doneText);
 }
+
+function loadPicture() {
+  return new Promise((resolve, reject) => {
+    if (stopped) return reject(new Error(EXPIRED));
+    const img = new Image();
+    const timer = setTimeout(() => reject(new Error(late(20))), 20000);
+    img.onload = () => { clearTimeout(timer); $("sahne").style.backgroundImage = "url(" + img.src + ")"; resolve(); };
+    img.onerror = () => { clearTimeout(timer); reject(new Error("TV'de henüz görüntü yok. Çeviri çalışırken PS5'in görüntüsü burada görünür.")); };
+    img.src = api("/api/kare.jpg?n=" + Date.now());
+  });
+}
+
+function refreshPicture() { loadPicture().catch(() => {}); }
 
 function render() {
   const areas = settings.regions;
@@ -294,8 +581,8 @@ function render() {
   areas.forEach((a, i) => $("secim").add(new Option((i + 1) + ". " + a.name, i, false, i === selected)));
   $("ad").value = areas[selected].name;
   $("tur").value = areas[selected].kind;
-  $("yeni").disabled = areas.length >= MAX_AREAS;
-  $("sil").disabled = areas.length <= 1;
+  setIdle("yeni", areas.length >= MAX_AREAS);
+  setIdle("sil", areas.length <= 1);
   $("font").value = settings.font;
   for (const k of ["subtitleSize", "boxSize", "opacity"]) { $(k).value = settings[k]; }
   $("turkceYer").checked = !!settings.turkish;
@@ -362,46 +649,52 @@ function endDrag() { if (dragging) { dragging = null; scheduleSave(); } }
 $("sahne").addEventListener("pointerup", endDrag);
 $("sahne").addEventListener("pointercancel", endDrag);
 
-$("secim").addEventListener("change", (e) => { selected = +e.target.value; render(); });
+$("secim").addEventListener("change", (e) => { if (!settings) return; selected = +e.target.value; render(); });
 $("ad").addEventListener("input", (e) => {
+  if (!settings) return;
   settings.regions[selected].name = e.target.value;
   $("sahne").querySelector(".alan.secili span").textContent = (selected + 1) + ". " + e.target.value;
   $("secim").options[selected].text = (selected + 1) + ". " + e.target.value;
   scheduleSave();
 });
-$("tur").addEventListener("change", (e) => { settings.regions[selected].kind = e.target.value; render(); scheduleSave(); });
+$("tur").addEventListener("change", (e) => { if (!settings) return; settings.regions[selected].kind = e.target.value; render(); scheduleSave(); });
 $("yeni").addEventListener("click", () => {
+  if (!settings) return tell(resultFor($("yeni")), false, NO_SETTINGS);
   if (settings.regions.length >= MAX_AREAS) return;
   settings.regions.push({ name: "Alan " + (settings.regions.length + 1), kind: "altyazi", left: 660, top: 440, right: 1260, bottom: 640 });
   selected = settings.regions.length - 1;
-  render(); scheduleSave();
+  render(); saveNow($("yeni"), "Yeni alan eklendi ve kaydedildi. Sahnede sarı çerçeveli olan o.");
 });
 $("sil").addEventListener("click", () => {
-  if (settings.regions.length <= 1 || !confirm("\"" + settings.regions[selected].name + "\" silinsin mi?")) return;
+  if (!settings) return tell(resultFor($("sil")), false, NO_SETTINGS);
+  const name = settings.regions[selected].name;
+  if (settings.regions.length <= 1 || !confirm("\"" + name + "\" silinsin mi?")) return;
   settings.regions.splice(selected, 1);
-  render(); scheduleSave();
+  render(); saveNow($("sil"), "\"" + name + "\" silindi.");
 });
 $("varsayilan").addEventListener("click", () => {
+  if (!settings) return tell(resultFor($("varsayilan")), false, NO_SETTINGS);
   if (!confirm("Bütün alanlar varsayılana dönsün mü?")) return;
   settings.regions = DEFAULT_AREAS.map((a) => ({ ...a }));
   selected = 0;
-  render(); scheduleSave();
+  render(); saveNow($("varsayilan"), "Alanlar varsayılana döndü ve kaydedildi.");
 });
-$("yenile").addEventListener("click", refreshPicture);
+$("yenile").addEventListener("click", () => press($("yenile"), loadPicture, "Yenileniyor…", "Görüntü yenilendi."));
 $("turkceYer").addEventListener("change", (e) => {
+  if (!settings) return;
   settings.turkish = e.target.checked ? { left: 192, top: 880, right: 1728, bottom: 1050 } : null;
   render(); scheduleSave();
 });
-$("skipIntro").addEventListener("change", (e) => { settings.skipIntro = e.target.checked; scheduleSave(); });
-$("font").addEventListener("change", (e) => { settings.font = e.target.value; sample(); scheduleSave(); });
+$("skipIntro").addEventListener("change", (e) => { if (!settings) return; settings.skipIntro = e.target.checked; scheduleSave(); });
+$("font").addEventListener("change", (e) => { if (!settings) return; settings.font = e.target.value; sample(); scheduleSave(); });
 for (const k of ["subtitleSize", "boxSize", "opacity"]) {
-  $(k).addEventListener("input", (e) => { settings[k] = +e.target.value; sample(); scheduleSave(); });
+  $(k).addEventListener("input", (e) => { if (!settings) return; settings[k] = +e.target.value; sample(); scheduleSave(); });
 }
 for (const k of ["textColor", "boxColor"]) {
-  $(k).addEventListener("input", (e) => { settings[k] = e.target.value.toUpperCase(); sample(); scheduleSave(); });
+  $(k).addEventListener("input", (e) => { if (!settings) return; settings[k] = e.target.value.toUpperCase(); sample(); scheduleSave(); });
 }
 
-// ---- Game packs. Everything from GitHub is put on the page as text, never as HTML.
+// ---- Talking to the TV. Everything from GitHub or the network is put on the page as text, never as HTML.
 function el(tag, props, ...children) {
   const e = document.createElement(tag);
   Object.assign(e, props || {});
@@ -409,24 +702,95 @@ function el(tag, props, ...children) {
   return e;
 }
 
-async function call(path, options) {
-  if (stopped) throw new Error("");
-  const r = await fetch(api(path), Object.assign({ cache: "no-store" }, options || {}))
-    .catch(() => { throw new Error("TV'ye ulaşılamadı. Televizyonda Türkçe TV uygulamasını açıp tekrar deneyin."); });
-  if (r.status === 403) { expired(); throw new Error(""); }
-  const data = await r.json().catch(() => ({}));
-  if (!r.ok || (data.error && !data.results)) throw new Error(data.error || "TV yanıt vermedi.");
-  return data;
+/** One request to the TV, given up after [seconds]; every failure becomes a message the person can act on. */
+async function call(path, options, seconds) {
+  if (stopped) throw new Error(EXPIRED);
+  const wait = seconds || 20;
+  const abort = typeof AbortController === "function" ? new AbortController() : null;
+  let timedOut = false;
+  const timer = setTimeout(() => { timedOut = true; if (abort) abort.abort(); }, wait * 1000);
+  try {
+    let r;
+    try { r = await fetch(api(path), Object.assign({ cache: "no-store" }, options || {}, abort ? { signal: abort.signal } : {})); }
+    catch (e) { throw new Error(timedOut ? late(wait) : UNREACHABLE); }
+    if (r.status === 403) { expired(); throw new Error(EXPIRED); }
+    let data;
+    try { data = await r.json(); } catch (e) { throw new Error(timedOut ? late(wait) : ODD); }
+    if (!r.ok || (data && data.error && !data.results)) throw new Error((data && data.error) || ODD);
+    return data;
+  } finally { clearTimeout(timer); }
 }
 
-function postJson(path, body) {
-  return call(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+function postJson(path, body, seconds) {
+  return call(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }, seconds);
 }
 
-async function packAction(work, busyText, doneText) {
-  status(busyText);
-  try { renderPacks(await work()); status(doneText); $("paketler").scrollIntoView({ behavior: "smooth", block: "start" }); }
-  catch (e) { if (e.message) status(e.message, true); }
+// ---- Button feedback: a spinner and "…ing" while it works, then green or red text right under it.
+function idle(btn) { return !btn.classList.contains("calisiyor"); }
+function setIdle(id, off) { const b = $(id); if (idle(b)) b.disabled = stopped || !!off; }
+
+function resultFor(btn) {
+  const anchor = btn.closest("[data-sonuc], .satir, .dosya") || btn;
+  let box = anchor.nextElementSibling;
+  if (!box || box.dataset.otomatik !== "1") {
+    box = el("div", { className: "sonuc", hidden: true });
+    box.setAttribute("role", "status");
+    box.dataset.otomatik = "1";
+    anchor.after(box);
+  }
+  return box;
+}
+
+/** kind: true green, false red, "bilgi" neutral. */
+function tell(box, kind, text) {
+  if (!text) { box.hidden = true; return; }
+  box.className = "sonuc " + (kind === true ? "iyi" : kind === false ? "kotu" : "bilgi-son");
+  box.textContent = (kind === true ? "✓ " : kind === false ? "✕ " : "") + text;
+  box.hidden = false;
+  if (box.getBoundingClientRect().bottom > window.innerHeight) box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+/** Runs [work] for [btn]; resolves to its value (true when none) or null after an error. Never rejects. */
+function press(btn, work, busyText, doneText) {
+  if (!idle(btn)) return Promise.resolve(null);
+  const kids = Array.from(btn.childNodes), box = resultFor(btn);
+  btn.classList.add("calisiyor");
+  btn.disabled = true;
+  btn.setAttribute("aria-busy", "true");
+  btn.textContent = busyText;
+  box.hidden = true;
+  function finish() {
+    btn.classList.remove("calisiyor");
+    btn.removeAttribute("aria-busy");
+    btn.textContent = "";
+    kids.forEach((k) => btn.append(k));
+    btn.disabled = stopped;
+    refreshLocks();
+  }
+  return Promise.resolve().then(work).then((value) => {
+    finish();
+    tell(box, true, typeof doneText === "function" ? doneText(value) : doneText);
+    return value === undefined ? true : value;
+  }, (e) => {
+    finish();
+    tell(box, false, (e && e.message) || ODD);
+    return null;
+  });
+}
+
+/** Puts back the buttons that depend on the state once a button is free again. */
+function refreshLocks() {
+  if (settings) { setIdle("yeni", settings.regions.length >= MAX_AREAS); setIdle("sil", settings.regions.length <= 1); }
+  if (state) renderState(state); else gate();
+}
+
+// ---- Game packs.
+function packAction(btn, work, busyText, doneText) {
+  return press(btn, async () => { const data = await work(); renderPacks(data); return data; }, busyText, doneText).then((data) => {
+    if (!data) return;
+    tell($("paketSonuc"), true, doneText);
+    $("paketSonuc").scrollIntoView({ behavior: "smooth", block: "center" });
+  });
 }
 
 function credit(p) {
@@ -454,32 +818,36 @@ function renderPacks(data) {
         p.donate ? el("a", { className: "bagis", href: p.donate, target: "_blank", rel: "noopener", textContent: "Destek ol / bağış yap" }) : null,
         p.source ? el("a", { href: p.source, target: "_blank", rel: "noopener", textContent: "Çevirinin sayfası" }) : null));
     const row = el("div", { className: "satir" });
-    row.append(on
-      ? el("button", { textContent: "Paketi kapat", onclick: () => packAction(() => postJson("/api/paket/sec", { id: "" }), "Kapatılıyor…", "Paket kapatıldı") })
-      : el("button", { textContent: "Bu paketi kullan", onclick: () => packAction(() => postJson("/api/paket/sec", { id: p.id }), "Seçiliyor…", p.game + " paketi kullanılıyor") }));
-    row.append(el("button", { textContent: "Sil", onclick: () => {
-      if (confirm(p.game + " paketi silinsin mi?")) packAction(() => postJson("/api/paket/sil", { id: p.id }), "Siliniyor…", "Silindi");
-    } }));
+    const pick = el("button", { textContent: on ? "Paketi kapat" : "Bu paketi kullan" });
+    pick.addEventListener("click", () => on
+      ? packAction(pick, () => postJson("/api/paket/sec", { id: "" }), "Kapatılıyor…", p.game + " paketi kapatıldı.")
+      : packAction(pick, () => postJson("/api/paket/sec", { id: p.id }), "Seçiliyor…", p.game + " paketi kullanılıyor."));
+    const remove = el("button", { textContent: "Sil" });
+    remove.addEventListener("click", () => {
+      if (confirm(p.game + " paketi silinsin mi?")) packAction(remove, () => postJson("/api/paket/sil", { id: p.id }), "Siliniyor…", p.game + " paketi silindi.");
+    });
+    row.append(pick, remove);
     card.append(row);
     box.append(card);
   });
 }
 
-async function search() {
-  const game = $("oyunAra").value.trim();
-  if (game.length < 2) return status("Oyun adını yaz.", true);
+function search() {
+  const btn = $("ara"), game = $("oyunAra").value.trim();
+  if (game.length < 2) return tell(resultFor(btn), false, "Aramak için oyunun adını yaz (en az 2 harf).");
   const out = $("sonuclar");
-  out.innerHTML = "";
-  status("Aranıyor, bulunan yamaların dosyaları kontrol ediliyor…");
-  try {
-    const data = await call("/api/paket/ara?q=" + encodeURIComponent(game));
-    if (data.error) status(data.error, true); else status(data.results.length ? data.results.length + " kullanılabilir yama" : "TV'nin okuyabildiği biçimde Türkçe yama bulunamadı; aşağıdaki bağlantılara bak.");
+  return press(btn, async () => {
+    out.innerHTML = "";
+    const data = await call("/api/paket/ara?q=" + encodeURIComponent(game), null, 60);
     data.results.forEach((r) => out.append(resultCard(r, game)));
     const links = el("div", { className: "kart" }, el("b", { textContent: "Başka yerlerde ara" }),
       el("div", { className: "not", textContent: "Bu sayfalar telefonda açılır. İndirdiğin dosyayı aşağıdaki \"Telefondaki dosyayı yükle\" bölümünden TV'ye gönder." }));
-    data.links.forEach((l) => links.append(el("div", {}, el("a", { href: l.url, target: "_blank", rel: "noopener", textContent: l.label }))));
+    (data.links || []).forEach((l) => links.append(el("div", {}, el("a", { href: l.url, target: "_blank", rel: "noopener", textContent: l.label }))));
     out.append(links);
-  } catch (e) { if (e.message) status(e.message, true); }
+    if (data.error) throw new Error(data.error);
+    if (!data.results.length) throw new Error("TV'nin okuyabildiği biçimde Türkçe yama bulunamadı; aşağıdaki bağlantılara bak.");
+    return data.results.length;
+  }, "Aranıyor…", (n) => n + " kullanılabilir yama bulundu; aşağıda.");
 }
 
 function resultCard(r, game) {
@@ -490,23 +858,23 @@ function resultCard(r, game) {
       el("span", { className: "etiket", textContent: "Çeviren: " + r.repo.split("/")[0] }),
       "★ " + r.stars + " · son güncelleme " + r.updated + (r.open ? " · lisans " + r.license : "")));
   const files = el("div");
-  const look = el("button", { textContent: "Çeviri dosyalarını göster", onclick: async () => {
-    look.disabled = true;
-    status("Depoya bakılıyor…");
-    try {
-      const data = await call("/api/paket/dosyalar?repo=" + encodeURIComponent(r.repo));
-      files.innerHTML = "";
-      if (!data.files.length) files.append(el("div", { className: "not", textContent: "TV'nin okuyabileceği çeviri dosyası yok (.po, .tsv, .csv, .txt, .rpy, .zip). Bu yama oyunun kendi biçiminde olabilir." }));
-      data.files.forEach((f) => files.append(el("div", { className: "dosya" },
+  const look = el("button", { textContent: "Çeviri dosyalarını göster" });
+  look.addEventListener("click", () => press(look, async () => {
+    const data = await call("/api/paket/dosyalar?repo=" + encodeURIComponent(r.repo), null, 30);
+    files.innerHTML = "";
+    if (!data.files.length) throw new Error("TV'nin okuyabileceği çeviri dosyası yok (.po, .tsv, .csv, .txt, .rpy, .zip). Bu yama oyunun kendi biçiminde olabilir.");
+    data.files.forEach((f) => {
+      const get = el("button", { textContent: "TV'ye indir" });
+      get.addEventListener("click", () => packAction(get,
+        () => postJson("/api/paket/indir", { repo: r.repo, path: f.path, game: game }, 180),
+        "İndiriliyor…", "Paket yüklendi ve seçildi."));
+      files.append(el("div", { className: "dosya" },
         el("span", { textContent: (f.path.startsWith("release/") ? "Yayın " + f.path.split("/")[1] + ": " + f.path.split("/").slice(2).join("/") : f.path) +
           (f.size > 0 ? " (" + Math.ceil(f.size / 1024) + " KB)" : "") }),
-        el("button", { textContent: "TV'ye indir", onclick: () => packAction(
-          () => postJson("/api/paket/indir", { repo: r.repo, path: f.path, game: game }),
-          "İndiriliyor, büyük dosyada biraz sürer…", "Paket yüklendi ve seçildi") }))));
-      status("Bir dosya seç");
-    } catch (e) { if (e.message) status(e.message, true); }
-    look.disabled = false;
-  } });
+        get));
+    });
+    return data.files.length;
+  }, "Bakılıyor…", (n) => n + " dosya bulundu. Birinin yanındaki \"TV'ye indir\"e bas."));
   card.append(el("div", { className: "satir" }, look), files);
   return card;
 }
@@ -514,41 +882,81 @@ function resultCard(r, game) {
 $("ara").addEventListener("click", search);
 $("oyunAra").addEventListener("keydown", (e) => { if (e.key === "Enter") search(); });
 $("yukle").addEventListener("click", () => {
-  const file = $("yukDosya").files[0];
-  if (!file) return status("Önce dosya seç.", true);
-  if (file.size > 30 * 1024 * 1024) return status("Dosya 30 MB'tan büyük.", true);
+  const btn = $("yukle"), file = $("yukDosya").files[0];
+  if (!file) return tell(resultFor(btn), false, "Önce yukarıdaki kutudan telefondaki çeviri dosyasını seç.");
+  if (file.size > 30 * 1024 * 1024) return tell(resultFor(btn), false, "Dosya 30 MB'tan büyük; TV bunu alamaz.");
   const q = "?dosya=" + encodeURIComponent(file.name) + "&oyun=" + encodeURIComponent($("yukOyun").value.trim()) +
     "&cevirmen=" + encodeURIComponent($("yukCevirmen").value.trim()) + "&kaynak=" + encodeURIComponent($("yukKaynak").value.trim()) + "&bagis=" + encodeURIComponent($("yukBagis").value.trim());
-  packAction(() => call("/api/paket/yukle" + q, { method: "POST", body: file }), "Gönderiliyor…", "Paket yüklendi ve seçildi");
+  packAction(btn, () => call("/api/paket/yukle" + q, { method: "POST", body: file }, 180), "Gönderiliyor…", "Paket yüklendi ve seçildi.");
 });
 
-// ---- Translation switch and PlayStation pairing. The page only ever learns whether a key exists, never the key.
-let state = null, busy = false;
+// ---- PS5 address typing. Mirrors SetupGuide on the TV, which checks again.
+const SEPARATORS = ".,٫、．。";
+const ZEROS = [0x30, 0x660, 0x6F0, 0x966, 0xFF10];
+const ADDRESS = /^\d{1,3}(?:\.\d{1,3}){3}(?!\.?\d)/;
 
-function isHome(ip) {
-  const n = (ip || "").split(".").map(Number);
-  return n.length === 4 && (n[0] === 10 || (n[0] === 172 && n[1] >= 16 && n[1] <= 31) || (n[0] === 192 && n[1] === 168));
+function digitOf(ch) {
+  const c = ch.charCodeAt(0);
+  for (const z of ZEROS) if (c >= z && c <= z + 9) return String(c - z);
+  return null;
 }
+function keepDigits(text) { let out = ""; for (const ch of text) { const d = digitOf(ch); if (d !== null) out += d; } return out; }
+/** While typing: digits stay, a comma (or any dot-like mark) becomes a dot, the rest goes. */
+function keepAddress(text) {
+  let out = "";
+  for (const ch of text) { const d = digitOf(ch); if (d !== null) out += d; else if (SEPARATORS.indexOf(ch) >= 0) out += "."; }
+  return out;
+}
+/** Pasted or finished text: the address in it, as "192.168.1.20". */
+function cleanAddress(text) {
+  let mapped = "";
+  for (const ch of String(text).trim()) { const d = digitOf(ch); mapped += d !== null ? d : SEPARATORS.indexOf(ch) >= 0 ? "." : " "; }
+  let address = null;
+  const runs = mapped.match(/[\d.]+/g) || [];
+  for (const run of runs) { const m = run.match(ADDRESS); if (m) { address = m[0]; break; } }
+  if (address === null) address = mapped.replace(/ /g, "");
+  const parts = address.split(".");
+  return parts.length === 4 && parts.every((x) => x.length >= 1 && x.length <= 3) ? parts.map((x) => String(parseInt(x, 10))).join(".") : address;
+}
+function isHome(ip) {
+  const parts = String(ip || "").split(".");
+  if (parts.length !== 4 || !parts.every((x) => /^(0|[1-9]\d{0,2})$/.test(x) && +x <= 255)) return false;
+  const a = +parts[0], b = +parts[1];
+  return a === 10 || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168);
+}
+function addressProblem(a) {
+  if (!a) return "Adresi yaz: noktayla ayrılmış dört sayı, ör. 192.168.1.20.";
+  const parts = a.split(".");
+  if (parts.length !== 4 || parts.some((x) => !/^\d+$/.test(x))) return "Adres noktayla ayrılmış dört sayıdır, ör. 192.168.1.20. Bir sayı eksik ya da fazla.";
+  const big = parts.find((x) => x.length > 3 || +x > 255);
+  if (big !== undefined) return "Adresteki her sayı 0 ile 255 arasındadır; " + big + " olamaz.";
+  if (!(+parts[3] >= 1 && +parts[3] <= 254)) return "Son sayı 1 ile 254 arasında olur.";
+  if (!isHome(a)) return "Bu adres ev ağına ait değil. PS5'in adresi çoğunlukla 192.168. ile başlar; PS5'teki adrese yeniden bak.";
+  return null;
+}
+
+// ---- Translation switch and the PS5 setup. The page only ever learns whether a key exists, never the key.
+let state = null, busy = 0, shownStep = 0, found = [], foundKey = "", fullAddressOpened = false;
+const forced = new Map();
+const DONE = ["Uzaktan Oynatma açık.", "Yeni hesap bağlandı.", "", "PS5 eşleşti."];
+const NOT_FOUND = "PS5 bulunamadı. Şunlara bak: PS5 açık mı? PS5 ve TV aynı modeme bağlı mı (biri misafir ağında olmasın)? Olmazsa aşağıdan PS5'in adresini elle yaz.";
 
 function renderState(s) {
   state = s;
   const p = s.ps5;
   $("ceviriDurum").textContent = (s.calisiyor ? "● " : "○ ") + (s.calisiyor && s.deneme ? "Deneme modu · " : "") + s.not;
   if (s.izin === false) $("ceviriDurum").textContent = "○ Önce TV'de izin ver: TV ekranındaki «İzni ver» düğmesine bas.";
-  $("baslat").disabled = busy || s.calisiyor;
-  $("durdur").disabled = busy || !s.calisiyor;
-  $("duraklat").disabled = busy || !s.calisiyor;
-  $("duraklat").textContent = s.duraklatildi ? "Devam" : "Duraklat";
-  if (s.girisAdresi) $("psnGiris").href = s.girisAdresi;
+  setIdle("baslat", s.calisiyor);
+  setIdle("durdur", !s.calisiyor);
+  setIdle("duraklat", !s.calisiyor);
+  if (idle($("duraklat"))) $("duraklat").textContent = s.duraklatildi ? "Devam" : "Duraklat";
   $("ps5Ozet").className = p.eslesti ? "ok" : "";
-  $("ps5Ozet").textContent = p.eslesti ? "✓ PlayStation eşleşmiş (" + p.adres + ")." : p.hesap ? "Yansıtma hesabı bağlı, PlayStation henüz eşleşmedi." : "PlayStation eşleşmemiş. Aşağıdaki adımları bir kez yap.";
-  if (p.eslesti) $("ps5Ozet").append(" ", el("button", { textContent: "PlayStation'ı uyandır", disabled: busy, onclick: () =>
-    control("/api/ps5/uyandir", {}, "Uyandırma gönderiliyor…", "Uyandırma gönderildi; PlayStation birkaç saniyede açılır.") }));
-  $("adim2").classList.toggle("tamam", p.hesap);
-  $("adim4").classList.toggle("tamam", p.eslesti);
-  $("adim5").classList.toggle("tamam", p.eslesti);
-  if (!p.eslesti && !$("sihirbaz").dataset.acildi) { $("sihirbaz").open = true; $("sihirbaz").dataset.acildi = "1"; }
-  $("unut").disabled = busy || s.calisiyor || (!p.hesap && !p.eslesti);
+  $("ps5OzetYazi").textContent = p.eslesti ? "✓ PS5 eşleşmiş (" + p.adres + ")." : "PS5 henüz bağlı değil. Aşağıdaki 4 adımı bir kez yap.";
+  $("uyandir").hidden = !p.eslesti;
+  setIdle("uyandir", false);
+  setIdle("unut", !p.hesap && !p.eslesti);
+  renderSteps(s, p, s.kurulum || { adimlar: [false, false, false, false], tamam: 0, sira: 1, uzaktanOynatma: false, secilenAdres: "", onek: "" });
+  gate();
   const ok = "✅ ", warn = "⚠️ ", home = isHome(location.hostname);
   const items = [
     [ok, "Yansıtma için ayrı bir PSN hesabı kullanılır; asıl hesabın bu uygulamaya hiç bağlanmaz."],
@@ -565,70 +973,253 @@ function renderState(s) {
   items.forEach(([mark, text]) => $("guvenlik").append(el("li", { className: mark === warn ? "uyari" : "", textContent: mark + text })));
 }
 
-async function refreshState() {
-  if (stopped || busy) return;
-  try { const s = await call("/api/durum"); if (!busy) renderState(s); } catch (e) {}
+/** The four step cards: a done step shows ✓ and folds to one line, the next one opens with a yellow frame. */
+function renderSteps(s, p, k) {
+  const current = k.sira;
+  if (current !== shownStep) {
+    const first = shownStep === 0;
+    forced.clear();
+    shownStep = current;
+    // A step just finished: bring the next one into view. Not on the first load, so a reload stays at the top.
+    if (!first) {
+      const target = current > 4 ? $("hazir") : $("adim" + current);
+      setTimeout(() => target.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
+    }
+  }
+  const chosen = k.secilenAdres || "";
+  for (let i = 1; i <= 4; i++) {
+    const li = $("adim" + i), done = !!k.adimlar[i - 1];
+    const open = forced.has(i) ? forced.get(i) : i === current;
+    li.classList.toggle("tamam", done);
+    li.classList.toggle("sira", i === current);
+    li.classList.toggle("acik", open);
+    li.querySelector(".adim-bas").setAttribute("aria-expanded", open ? "true" : "false");
+    li.querySelector(".no").textContent = done ? "✓" : String(i);
+    const where = chosen || p.adres;
+    li.querySelector(".adim-ozet").textContent = done ? (i === 3 ? "PS5 seçildi" + (where ? ": " + where : ".") : DONE[i - 1]) : i === current ? "Sıradaki adım" : "";
+  }
+  $("ilerlemeYazi").textContent = k.tamam >= 4 ? "Kurulum tamam: 4 adımın hepsi bitti ✓" : "4 adımdan " + ["0'ı", "1'i", "2'si", "3'ü"][k.tamam] + " tamam";
+  $("ilerleme").querySelectorAll(".cubuk i").forEach((b, i) => b.classList.toggle("dolu", !!k.adimlar[i]));
+
+  // Step 1 is marked on the phone; pairing marks it too.
+  $("yaptim").hidden = !!k.adimlar[0];
+  $("yaptimGeri").hidden = !(k.uzaktanOynatma && !p.eslesti);
+  // Step 2: once linked, only "bağlandı" and the way to change the account.
+  $("hesapTamam").hidden = !k.adimlar[1];
+  $("hesapAdimlari").hidden = !!k.adimlar[1];
+  // Step 3: found PS5s to tap, the chosen address, and the TV's own network prefix for typing only the last number.
+  $("seciliAdres").hidden = !chosen;
+  $("seciliAdres").textContent = "✓ Seçili PS5 adresi: " + chosen;
+  $("onek").textContent = k.onek ? k.onek + "." : "";
+  $("onekSatir").hidden = !k.onek;
+  $("onekNot").hidden = !k.onek;
+  if (!k.onek && !fullAddressOpened) { fullAddressOpened = true; $("tamAdres").open = true; }
+  renderFound(chosen);
+  // Step 4
+  const ps5 = found.filter((f) => f.adres === chosen)[0];
+  $("eslesAdres").textContent = !chosen ? "Önce 3. adımda PS5'i seç." :
+    "Eşleştirilecek PS5: " + chosen + (ps5 && !ps5.uyanik ? " (dinlenme modunda: önce kumandadaki PS tuşuyla aç)" : "");
+  // Hazır
+  $("hazir").hidden = !p.eslesti;
+  const go = $("hazirBaslat");
+  if (idle(go)) { go.textContent = s.calisiyor ? "● Çeviri çalışıyor" : "Çeviriyi başlat"; go.disabled = stopped || s.calisiyor; }
 }
 
-async function control(path, body, busyText, doneText) {
-  if (busy) return false;
-  busy = true;
-  if (state) renderState(state);
-  status(busyText);
+function renderFound(chosen) {
+  const key = chosen + "|" + found.map((f) => f.adres + ":" + f.uyanik).join(",");
+  if (key === foundKey) return;
+  foundKey = key;
+  const box = $("bulunan");
+  box.textContent = "";
+  found.forEach((f) => {
+    const on = f.adres === chosen;
+    const b = el("button", { type: "button", className: "ps5-sec" + (on ? " secili" : "") },
+      el("span", {}, el("b", { textContent: f.ad || "PS5" }), el("span", { className: "k", textContent: f.adres + (f.uyanik ? " · açık" : " · dinlenme modunda") })),
+      el("span", { className: "sec-isaret", textContent: on ? "✓ Seçildi" : "Bunu seç" }));
+    b.addEventListener("click", () => chooseAddress(b, f.adres));
+    box.append(b);
+  });
+}
+
+/** The pairing buttons stay shut until the person confirms a new, separate account. */
+function gate() {
+  const ok = $("ayriHesap").checked && !stopped;
+  $("hesapDugmeler").classList.toggle("kilitli", !ok);
+  $("kilitNot").hidden = ok;
+  const link = $("psnGiris");
+  link.setAttribute("href", ok && state && state.girisAdresi ? state.girisAdresi : "#");
+  link.setAttribute("aria-disabled", ok ? "false" : "true");
+  link.tabIndex = ok ? 0 : -1;
+  $("psnAdres").disabled = !ok;
+  $("psnKimlik").disabled = !ok;
+  setIdle("psnBagla", !ok);
+  setIdle("kimlikKaydet", !ok);
+}
+
+function flashConsent() {
+  const box = $("onayEtiket");
+  box.classList.remove("uyar");
+  void box.offsetWidth;
+  box.classList.add("uyar");
+  box.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+let lost = false;
+async function refreshState() {
+  if (stopped || busy) return;
   try {
-    const s = await postJson(path, body);
-    busy = false;
-    renderState(Object.assign({ girisAdresi: state && state.girisAdresi }, s));
-    status(doneText);
-    return true;
+    const s = await call("/api/durum", null, 10);
+    if (lost) { lost = false; status("Bağlı"); }
+    if (!busy) renderState(s);
   } catch (e) {
-    busy = false;
-    if (state) renderState(state);
-    if (e.message) status(e.message, true);
-    return false;
+    if (!stopped && !lost) { lost = true; status("TV'ye ulaşılamıyor. Telefon evdeki Wi-Fi'da mı?", true); }
   }
 }
 
-$("baslat").addEventListener("click", () => control("/api/ceviri", { islem: "baslat" }, "Başlatılıyor…", "Çeviri başlatıldı; PlayStation'a bağlanıyor."));
-$("durdur").addEventListener("click", () => control("/api/ceviri", { islem: "durdur" }, "Durduruluyor…", "Çeviri durduruluyor."));
+/** A setup or translation button: its feedback, then the new state from the TV. */
+async function control(btn, path, body, busyText, doneText, seconds) {
+  busy++;
+  try {
+    const s = await press(btn, () => postJson(path, body, seconds), busyText, doneText);
+    if (s && typeof s === "object") renderState(Object.assign({ girisAdresi: state && state.girisAdresi }, s));
+    return s;
+  } finally { busy--; }
+}
+
+function chooseAddress(btn, address) {
+  return control(btn, "/api/ps5/kurulum", { adres: address }, "Kaydediliyor…", "PS5 seçildi: " + address + ". Şimdi 4. adım.");
+}
+
+document.querySelectorAll(".adim-bas").forEach((b) => b.addEventListener("click", () => {
+  const li = b.closest(".adim"), open = !li.classList.contains("acik");
+  forced.set(+li.id.slice(4), open);
+  li.classList.toggle("acik", open);
+  b.setAttribute("aria-expanded", open ? "true" : "false");
+}));
+
+$("baslat").addEventListener("click", () => control($("baslat"), "/api/ceviri", { islem: "baslat" }, "Başlatılıyor…", "Çeviri başlatıldı; PS5'e bağlanıyor."));
+$("hazirBaslat").addEventListener("click", () => control($("hazirBaslat"), "/api/ceviri", { islem: "baslat" }, "Başlatılıyor…",
+  "Çeviri başlatıldı. TV'yi PS5'in girişine al; altyazılı bir sahnede birkaç saniye içinde Türkçesi çıkar."));
+$("durdur").addEventListener("click", () => control($("durdur"), "/api/ceviri", { islem: "durdur" }, "Durduruluyor…", "Çeviri durduruluyor."));
 $("duraklat").addEventListener("click", () => {
   const paused = state && state.duraklatildi;
-  control("/api/ceviri", { islem: paused ? "devam" : "duraklat" }, paused ? "Devam ediliyor…" : "Duraklatılıyor…", paused ? "Çeviri devam ediyor" : "Duraklatıldı");
+  control($("duraklat"), "/api/ceviri", { islem: paused ? "devam" : "duraklat" }, paused ? "Devam ediliyor…" : "Duraklatılıyor…", paused ? "Çeviri devam ediyor." : "Duraklatıldı.");
 });
-$("psnBagla").addEventListener("click", async () => {
-  const text = $("psnAdres").value.trim();
-  if (!text.includes("code=")) return status("Yapıştırdığın adreste \"code=\" yok. Girişten sonra açılan sayfanın adresini kopyala.", true);
-  if (await control("/api/ps5/psn", { adres: text }, "Sony'den hesap numarası alınıyor…", "PSN hesabı bağlandı. Şimdi 3. adım: PlayStation'ı bul.")) $("psnAdres").value = "";
+$("uyandir").addEventListener("click", () => control($("uyandir"), "/api/ps5/uyandir", {}, "Gönderiliyor…", "Uyandırma gönderildi; PS5 birkaç saniyede açılır."));
+
+$("yaptim").addEventListener("click", () => control($("yaptim"), "/api/ps5/kurulum", { uzaktanOynatma: true }, "Kaydediliyor…", "1. adım tamam."));
+$("yaptimGeri").addEventListener("click", () => control($("yaptimGeri"), "/api/ps5/kurulum", { uzaktanOynatma: false }, "Kaydediliyor…", "1. adım yeniden açıldı."));
+
+try { $("ayriHesap").checked = sessionStorage.getItem("ayriHesap") === "1"; } catch (e) {}
+$("ayriHesap").addEventListener("change", () => {
+  try { sessionStorage.setItem("ayriHesap", $("ayriHesap").checked ? "1" : ""); } catch (e) {}
+  $("onayEtiket").classList.remove("uyar");
+  gate();
 });
-$("kimlikKaydet").addEventListener("click", async () => {
-  if (await control("/api/ps5/hesap", { kimlik: $("psnKimlik").value.trim() }, "Kaydediliyor…", "Hesap kimliği kaydedildi.")) $("psnKimlik").value = "";
+$("hesapDugmeler").addEventListener("click", (e) => {
+  if ($("hesapDugmeler").classList.contains("kilitli")) { e.preventDefault(); flashConsent(); }
 });
-$("ps5Bul").addEventListener("click", async () => {
-  const out = $("bulunan");
-  out.innerHTML = "";
-  status("Ev ağında PlayStation aranıyor…");
-  try {
-    const data = await call("/api/ps5/bul");
-    if (!data.bulunan.length) return status("PlayStation bulunamadı. PlayStation açık mı, aynı ağda mı? IP adresini elle yazabilirsin.", true);
-    data.bulunan.forEach((p) => out.append(el("div", { className: "dosya" },
-      el("span", { textContent: p.ad + " · " + p.adres + (p.uyanik ? " · açık" : " · dinlenme modunda") }),
-      el("button", { textContent: "Bunu seç", onclick: () => { $("ps5Ip").value = p.adres; status(p.ad + " seçildi. Şimdi 4. adım: kodu yaz."); } }))));
-    if (data.bulunan.length === 1) $("ps5Ip").value = data.bulunan[0].adres;
-    status(data.bulunan.length + " PlayStation bulundu");
-  } catch (e) { if (e.message) status(e.message, true); }
+$("psnGiris").addEventListener("click", (e) => {
+  if (!$("ayriHesap").checked) { e.preventDefault(); flashConsent(); return; }
+  if ($("psnGiris").getAttribute("href") === "#") {
+    e.preventDefault();
+    return tell(resultFor($("psnGiris")), false, "Sayfa TV'den henüz bilgi almadı. Birkaç saniye bekleyip tekrar bas; olmazsa sayfayı yenile.");
+  }
+  tell(resultFor($("psnGiris")), "bilgi", "Sony'nin giriş sayfası yeni sekmede açıldı. Yeni hesabınla gir, sonra adres çubuğundaki adresin tamamını kopyalayıp bu sekmeye dön.");
 });
-$("eslestir").addEventListener("click", async () => {
-  const ip = $("ps5Ip").value.trim(), pin = $("ps5Pin").value.replace(/\D/g, "");
-  if (!isHome(ip)) return status("Önce 3. adımda PlayStation'ı bul ya da ev ağı adresini (192.168.x.x) yaz.", true);
-  if (pin.length !== 8) return status("PlayStation'ın gösterdiği 8 haneli kodu yaz.", true);
-  if (await control("/api/ps5/eslestir", { ip, pin }, "PlayStation ile eşleşiliyor, birkaç saniye sürer…", "PlayStation eşleşti. Yukarıdan \"Başlat\"a bas.")) $("ps5Pin").value = "";
+$("psnBagla").addEventListener("click", () => {
+  const btn = $("psnBagla"), text = $("psnAdres").value.trim();
+  if (!text) return tell(resultFor(btn), false, "Kutu boş. Sony'deki girişten sonra açılan sayfanın adresini kopyalayıp kutuya yapıştır.");
+  if (text.indexOf("code=") < 0) return tell(resultFor(btn), false, "Yapıştırdığın adreste \"code=\" yok. Girişten sonra açılan sayfanın adres çubuğundaki adresin tamamını kopyala.");
+  control(btn, "/api/ps5/psn", { adres: text }, "Sony'den bilgi alınıyor…", "Yeni hesap bağlandı. Şimdi 3. adım: PS5'i bul.", 40)
+    .then((s) => { if (s) $("psnAdres").value = ""; });
+});
+$("kimlikKaydet").addEventListener("click", () => {
+  const btn = $("kimlikKaydet"), id = $("psnKimlik").value.trim();
+  if (!id) return tell(resultFor(btn), false, "Hesap kimliğini yaz (12 karakter, ör. AbCdEfGhIjk=).");
+  control(btn, "/api/ps5/hesap", { kimlik: id }, "Kaydediliyor…", "Hesap kimliği kaydedildi.").then((s) => { if (s) $("psnKimlik").value = ""; });
+});
+$("hesapDegistir").addEventListener("click", () => {
+  const paired = state && state.ps5.eslesti;
+  if (!confirm("Bağlı hesap TV'den silinsin mi?" + (paired ? " PS5 eşleşmesi de silinir; 4. adımı yeniden yapman gerekir." : "") + " Sonra yeni hesabı bağlarsın.")) return;
+  control($("hesapDegistir"), "/api/ps5/unut", {}, "Siliniyor…", "Eski hesap TV'den silindi. Şimdi yeni hesabı bağla.");
+});
+
+$("ps5Bul").addEventListener("click", () => {
+  busy++;
+  press($("ps5Bul"), async () => {
+    const d = await call("/api/ps5/bul", null, 15);
+    found = d.bulunan || [];
+    foundKey = "";
+    renderState(Object.assign({ girisAdresi: state && state.girisAdresi }, d));
+    if (!found.length) { $("elle").open = true; throw new Error(NOT_FOUND); }
+    return found;
+  }, "Aranıyor… (en çok 15 saniye)", (list) => list.length === 1
+    ? "PS5 bulundu ve seçildi: " + (list[0].ad || "PS5") + " (" + list[0].adres + "). Şimdi 4. adım." +
+      (list[0].uyanik ? "" : " PS5 dinlenme modunda; kodu almak için kumandadaki PS tuşuyla aç.")
+    : list.length + " PS5 bulundu. Aşağıdan kendi PS5'ine dokun.").then(() => { busy--; });
+});
+$("sonSayi").addEventListener("input", (e) => {
+  const v = keepDigits(e.target.value).slice(0, 3);
+  if (v !== e.target.value) e.target.value = v;
+});
+$("sonSayi").addEventListener("keydown", (e) => { if (e.key === "Enter") $("sonSayiKaydet").click(); });
+$("sonSayiKaydet").addEventListener("click", () => {
+  const btn = $("sonSayiKaydet"), v = $("sonSayi").value, n = parseInt(v, 10);
+  if (!v) return tell(resultFor(btn), false, "PS5'teki adresin son sayısını yaz (ör. 20).");
+  if (!(n >= 1 && n <= 254)) return tell(resultFor(btn), false, "Son sayı 1 ile 254 arasında olur; " + v + " olamaz. PS5'teki adrese yeniden bak.");
+  if (!state || !state.kurulum || !state.kurulum.onek) return tell(resultFor(btn), false, "TV'nin ağ bilgisi alınamadı. Aşağıdan adresin tamamını yaz.");
+  chooseAddress(btn, state.kurulum.onek + "." + n);
+});
+let typedLength = 0;
+$("ps5Ip").addEventListener("input", (e) => {
+  const f = e.target, before = f.value;
+  const pasted = (e.inputType && e.inputType.indexOf("insertFrom") === 0) || before.length - typedLength > 1;
+  if (pasted) {
+    f.value = cleanAddress(before);
+  } else {
+    const v = keepAddress(before);
+    if (v !== before) {
+      const caret = f.selectionStart === null ? before.length : f.selectionStart;
+      const at = keepAddress(before.slice(0, caret)).length;
+      f.value = v;
+      try { f.setSelectionRange(at, at); } catch (x) {}
+    }
+  }
+  typedLength = f.value.length;
+  const box = resultFor($("ipKaydet")), parts = f.value.split(".");
+  if (parts.length >= 4 && parts[3] !== "") {
+    const a = cleanAddress(f.value), why = addressProblem(a);
+    tell(box, !why, why || "Adres doğru görünüyor: " + a);
+  } else box.hidden = true;
+});
+$("ipKaydet").addEventListener("click", () => {
+  const btn = $("ipKaydet"), a = cleanAddress($("ps5Ip").value), why = addressProblem(a);
+  if (why) return tell(resultFor(btn), false, why);
+  $("ps5Ip").value = a;
+  typedLength = a.length;
+  chooseAddress(btn, a);
+});
+$("ps5Pin").addEventListener("input", (e) => {
+  const v = keepDigits(e.target.value).slice(0, 8);
+  if (v !== e.target.value) e.target.value = v;
+  $("pinSay").textContent = "Yazılan rakam: " + v.length + " / 8";
+});
+$("ps5Pin").addEventListener("keydown", (e) => { if (e.key === "Enter") $("eslestir").click(); });
+$("eslestir").addEventListener("click", () => {
+  const btn = $("eslestir"), ip = state && state.kurulum ? state.kurulum.secilenAdres : "", pin = keepDigits($("ps5Pin").value);
+  if (!ip) return tell(resultFor(btn), false, "Önce 3. adımda PS5'i bul ya da adresini yaz.");
+  if (pin.length !== 8) return tell(resultFor(btn), false, "PS5'in gösterdiği kod 8 rakamdır; şu an " + pin.length + " rakam yazılı.");
+  control(btn, "/api/ps5/eslestir", { ip: ip, pin: pin }, "Eşleştiriliyor… (en çok 1 dakika)", "PS5 eşleşti. Aşağıdaki \"Hazır\" bölümüne geç.", 60)
+    .then((s) => { if (s) { $("ps5Pin").value = ""; $("pinSay").textContent = "Yazılan rakam: 0 / 8"; } });
 });
 $("unut").addEventListener("click", () => {
   if (confirm("PSN hesap numarası ve PlayStation eşleşmesi TV'den silinsin mi? Sonra yeniden eşleştirmen gerekir.")) {
-    control("/api/ps5/unut", {}, "Siliniyor…", "Silindi. PlayStation'da Uzaktan Oynatma → Bağlı Cihazlar'dan TV'yi de kaldırabilirsin.");
+    control($("unut"), "/api/ps5/unut", {}, "Siliniyor…", "Silindi. PlayStation'da Uzaktan Oynatma → Bağlı Cihazlar'dan TV'yi de kaldırabilirsin.");
   }
 });
 
+gate();
 refreshState();
 setInterval(() => { if (!document.hidden) refreshState(); }, 3000);
 
