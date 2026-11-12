@@ -1,7 +1,7 @@
 package dev.turkce.olcum
 
 import android.content.Context
-import android.content.Intent
+import android.util.Log
 import java.io.File
 import java.net.DatagramPacket
 import java.net.DatagramSocket
@@ -18,8 +18,14 @@ import org.json.JSONObject
 
 /** The translation runs until someone stops it from the TV or the phone, or the PS5 ends the session. */
 internal const val UNTIL_STOPPED = 0
-internal const val OPEN_APP_FIRST = "Televizyonda Tv Türkçe Altyazı uygulamasını açıp tekrar deneyin."
 internal const val MODEL_FAILED = "Çeviri modeli kurulamadı: TV'de yer var mı?"
+/** The app's service, which holds the phone panel and the translation, is not running: only the TV can start it. */
+internal const val OPEN_APP = "TV'de Tv Türkçe Altyazı'yı aç, sonra tekrar dene."
+internal const val NEED_OVERLAY = "Önce TV'de izin ver: TV ekranındaki \"İzni ver\" düğmesine bas."
+/** A PS5 session that ended without anyone stopping it. */
+internal const val SESSION_ENDED = "PS5 ile bağlantı kesildi: PS5 kapanmış, dinlenmeye geçmiş ya da ağ kopmuş olabilir. Tekrar aç."
+internal const val DEMO_ENDED = "Deneme kapandı. Tekrar açabilirsin."
+private val TURKISH_LETTERS = Regex("[çğıöşüÇĞİÖŞÜ]")
 private const val PIN_DIGITS = 8
 private const val ACCOUNT_BYTES = 8
 private const val DISCOVERY_PORT = 9302
@@ -33,62 +39,202 @@ private const val PSN_TOKEN_URL = "https://auth.api.sonyentertainmentnetwork.com
 private const val PSN_SCOPE =
     "psn:clientapp referenceDataService:countryConfig.read pushNotification:webSocket.desktop.connect sessionManager:remotePlaySession.system.update"
 
-/** The on/off switch the phone page and the TV share. The service sets [running]; the pipeline reads the rest. */
+/** Where the switch stands, for the phone page and the TV; [FAILED] is "off, and here is why" (the note). */
+internal enum class Phase(val key: String) {
+    OFF("kapali"), STARTING("baslatiliyor"), ON("acik"), STOPPING("durduruluyor"), FAILED("hata"),
+}
+
+/**
+ * The on/off switch the phone page and the TV share. A run is a thread inside the app's service, never a new start
+ * of the service: the TV starts the service once while its screen is in front ([OlcumService.ready]), and from then
+ * on the phone can turn the translation on and off while the game holds the screen. One run at a time, PS5 or demo.
+ */
 internal object Translation {
     val running = AtomicBoolean(false)
     @Volatile var stopAsked = false
     @Volatile var paused = false
     @Volatile var note = "Kapalı"
+    @Volatile var phase = Phase.OFF
+        private set
 
     /** True while the run reads the demo clip instead of the PS5. One run at a time either way: [running] is shared. */
     @Volatile var demo = false
+        private set
 
     /** When the demo clip's first frame went to the decoder ([System.nanoTime]), so the demo screen plays in step; 0 when not. */
     @Volatile var demoStartNs = 0L
 
-    /** True while the app's TV screen is in front. Android lets an app start its foreground service only then. */
-    @Volatile var screenOpen = false
+    /** The demo screen's OK button: the demo pack's human lines when on, the machine's own when off. */
+    @Volatile var demoPack = true
+
+    /** Counts runs, so a screen watching one sees it end even when the next one starts right after. */
+    @Volatile var runId = 0
+        private set
+
+    /** A start asked for while the last run was still letting go; it begins as soon as that run has ended. */
+    private var queued: Run? = null
+
+    private class Run(val demo: Boolean, val seconds: Int, val ocrMs: Int, val reads: Int)
 
     /**
-     * False when it already runs. Throws with a message for the phone page or the TV screen when it cannot start.
-     * [demo] reads the clip inside the app instead of the PS5. The model is installed by the service, not here,
-     * so a start from the phone page never copies it on the TV's screen thread.
+     * False when the same kind of run is already on. Throws with a message for the phone page or the TV screen when
+     * it cannot start. [demo] reads the clip inside the app instead of the PS5. A game asked for during the demo
+     * replaces it; the demo never replaces a game. A start during a stop waits for the stop, then runs.
      */
-    fun start(context: Context, demo: Boolean = false): Boolean {
-        if (running.get()) return false
-        check(screenOpen) { OPEN_APP_FIRST }
-        check(FirstRun.canOverlay(context)) { "Önce TV'de izin ver: TV ekranındaki \"İzni ver\" düğmesine bas." }
-        if (!running.compareAndSet(false, true)) return false
+    @Synchronized
+    fun start(
+        context: Context, demo: Boolean = false, seconds: Int = UNTIL_STOPPED, ocrMs: Int = 120, reads: Int = 1,
+    ): Boolean {
+        val app = context.applicationContext
+        check(FirstRun.canOverlay(app)) { NEED_OVERLAY }
+        check(OlcumService.alive) { OPEN_APP }
+        val run = Run(demo, seconds, ocrMs, reads)
+        if (running.get()) {
+            if (!stopAsked) {
+                if (this.demo == demo) return false
+                check(!demo) { "Önce çeviriyi durdur." }
+                stopNow()
+            }
+            queued = run
+            phase = Phase.STARTING
+            note = "Başlatılıyor"
+            return true
+        }
+        running.set(true)
         // A pairing checks [running] after taking the gate and this checks the gate after setting [running], so the
         // PS5 session and a pairing never overlap: the later one of the two is refused.
         if (!demo && ChiakiGate.calls.current == ChiakiGate.PAIRING) {
             running.set(false)
             throw IllegalStateException(busyMessage(ChiakiGate.PAIRING))
         }
-        stopAsked = false
-        paused = false
-        this.demo = demo
-        note = if (FirstRun.modelReady(context)) "Başlatılıyor" else "Çeviri modeli hazırlanıyor"
-        val intent = Intent(context, OlcumService::class.java)
-            .putExtra("stage", "ps5boru").putExtra("seconds", UNTIL_STOPPED).putExtra("uygulama", true)
-            .putExtra("deneme", demo)
-        try {
-            context.startForegroundService(intent)
-        } catch (error: Exception) {
-            running.set(false)
-            this.demo = false
-            note = "Başlatılamadı"
-            // Android 12+ refuses a foreground service started from the background (ForegroundServiceStartNotAllowedException).
-            if (error is IllegalStateException) throw IllegalStateException(OPEN_APP_FIRST, error)
-            throw error
-        }
+        launch(app, run)
         return true
     }
 
+    /** Off: the run lets go of the PS5 and ends; the service and the phone panel stay. Also clears a shown error. */
+    @Synchronized
     fun stop() {
-        if (!running.get()) return
+        queued = null
+        if (running.get()) {
+            stopNow()
+        } else if (phase == Phase.FAILED) {
+            phase = Phase.OFF
+            note = "Kapalı"
+        }
+    }
+
+    /** A start is waiting for the last run to let go. */
+    val waiting: Boolean get() = synchronized(this) { queued != null }
+
+    /** Leaving the demo screen ends the demo, and only the demo: a game that replaced it keeps running. */
+    @Synchronized
+    fun stopDemo() {
+        if (queued?.demo == true) {
+            queued = null
+            return
+        }
+        if (running.get() && demo && queued == null && !stopAsked) stopNow()
+    }
+
+    private fun stopNow() {
         stopAsked = true
+        phase = Phase.STOPPING
         note = "Durduruluyor"
+    }
+
+    /** The running pipeline's word for the switch; dropped once a stop was asked, so "Durduruluyor" stays till the end. */
+    @Synchronized
+    fun say(text: String, now: Phase? = null) {
+        if (stopAsked) return
+        note = text
+        if (now != null) phase = now
+    }
+
+    private fun launch(app: Context, run: Run) {
+        running.set(true)
+        stopAsked = false
+        paused = false
+        demo = run.demo
+        demoStartNs = 0L
+        runId++
+        phase = Phase.STARTING
+        note = if (FirstRun.modelReady(app)) "Başlatılıyor" else "Çeviri modeli hazırlanıyor"
+        LineStats.reset()
+        OlcumService.showState(app)
+        Thread({
+            val root = workDir(app)
+            val log = runLog(root)
+            var failure: String? = null
+            try {
+                prepareModel(app)
+                if (!stopAsked) {
+                    val ps5 = Ps5Measurements(root, app.filesDir, log, app)
+                    ps5.pipelineStage(run.seconds, run.ocrMs, run.reads, if (run.demo) DemoSource(app, log) else ps5.ps5Source())
+                }
+            } catch (error: Throwable) {
+                if (error is IllegalStateException) failure = error.message
+                log("HATA ceviri: ${Log.getStackTraceString(error).take(1500)}")
+            } finally {
+                ended(app, run, failure)
+            }
+        }, "ceviri").start()
+    }
+
+    /**
+     * The model comes out of the APK on first use, here on the run's own thread rather than on the screen's or the
+     * phone page's; the TV and the phone say so meanwhile.
+     */
+    private fun prepareModel(app: Context) {
+        if (FirstRun.modelReady(app)) return
+        say("Çeviri modeli hazırlanıyor")
+        try {
+            FirstRun.installModel(app)
+        } catch (error: Exception) {
+            throw IllegalStateException(MODEL_FAILED, error)
+        }
+    }
+
+    /** A run ended: starts the one waiting, or says why it ended when nobody stopped it. */
+    @Synchronized
+    private fun ended(app: Context, run: Run, failure: String?) {
+        val stopped = stopAsked
+        val wasDemo = demo
+        val wasOn = phase == Phase.ON
+        val next = queued
+        queued = null
+        paused = false
+        stopAsked = false
+        demo = false
+        demoStartNs = 0L
+        if (next != null) {
+            val problem = when {
+                !FirstRun.canOverlay(app) -> NEED_OVERLAY
+                !OlcumService.alive -> OPEN_APP
+                !next.demo && ChiakiGate.calls.current == ChiakiGate.PAIRING -> busyMessage(ChiakiGate.PAIRING)
+                else -> null
+            }
+            if (problem == null) {
+                launch(app, next)
+                return
+            }
+            note = problem
+            phase = Phase.FAILED
+        } else if (stopped || run.seconds != UNTIL_STOPPED && wasOn && failure == null) {
+            // Stopped from the TV or the phone, or (debug only) a timed run that reached its end.
+            note = "Kapalı"
+            phase = Phase.OFF
+        } else {
+            note = when {
+                // The app's own messages are Turkish; system text (English) is replaced by what probably happened.
+                failure != null && TURKISH_LETTERS.containsMatchIn(failure) -> failure
+                note.startsWith("PlayStation'a bağlanamadı") || note == DEMO_FAILED || note == MODEL_FAILED -> note
+                wasDemo -> DEMO_ENDED
+                else -> SESSION_ENDED
+            }
+            phase = Phase.FAILED
+        }
+        running.set(false)
+        OlcumService.showState(app)
     }
 
     fun toJson(context: Context): JSONObject = JSONObject()
@@ -96,6 +242,8 @@ internal object Translation {
         .put("deneme", running.get() && demo)
         .put("duraklatildi", paused)
         .put("not", note)
+        .put("durum", phase.key)
+        .put("neden", if (phase == Phase.FAILED) note else "")
         .put("izin", FirstRun.canOverlay(context))
         .put("ps5", Ps5Setup.status(context))
 }
@@ -271,7 +419,7 @@ internal object Ps5Setup {
 
     /** Pairs with the PIN the PS5 shows under Remote Play. The keys go to the app's private folder only. */
     fun pair(context: Context, host: String, pin: String) {
-        val account = account(context) ?: error("Önce PSN ile giriş yap (2. adım).")
+        val account = account(context) ?: error("Önce 3. adımda yeni hesapla giriş yap.")
         require(isHomeAddress(host)) { "PlayStation adresi ev ağına ait olmalı (192.168.x.x gibi)." }
         val digits = pin.filter(Char::isDigit)
         require(digits.length == PIN_DIGITS) { "PlayStation'ın gösterdiği kod $PIN_DIGITS haneli olmalı." }

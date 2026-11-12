@@ -9,6 +9,7 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.Gravity
+import android.view.KeyEvent
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.view.View
@@ -27,17 +28,21 @@ private const val MAX_DRIFT_MS = 300
 /** A seek lands a little late; give it time before the next check. */
 private const val SEEK_SETTLE_MS = 2_000L
 private const val EDGE_PX = 40
+/** The remote's OK, and what other remotes and game pads send for it. */
+private val OK_KEYS = setOf(KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_NUMPAD_ENTER, KeyEvent.KEYCODE_BUTTON_A)
 
 /**
  * Deneme modu: the sample clip inside the app plays full screen, while the translation service reads the same clip
  * through the product flow and puts the Turkish on top, as it would over a game. No PS5 and no network. The picture
- * follows the service's clock so the Turkish matches the English on screen. Back, or leaving the screen any other
- * way, stops the demo.
+ * follows the service's clock so the Turkish matches the English on screen. The remote's OK turns the demo's own game
+ * pack on and off, so the human translation and the machine's can be compared line by line. Back, or leaving the
+ * screen any other way, stops the demo.
  */
 class DenemeActivity : Activity(), SurfaceHolder.Callback {
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var surface: SurfaceView
     private lateinit var status: TextView
+    private lateinit var packLabel: TextView
     private var player: MediaPlayer? = null
     @Volatile private var clip: File? = null
     private var prepared = false
@@ -75,11 +80,23 @@ class DenemeActivity : Activity(), SurfaceHolder.Callback {
             background = rounded(Color.argb(190, 0, 0, 0))
             setPadding(32, 20, 32, 20)
         }
+        // Each visit starts with the human translation on: that is what the demo is there to show.
+        Translation.demoPack = true
+        packLabel = TextView(this).apply {
+            textSize = 16f
+            gravity = Gravity.END
+            setTextColor(Color.WHITE)
+            background = rounded(Color.argb(170, 0, 0, 0))
+            setPadding(20, 10, 20, 10)
+        }
+        showPack()
         val root = FrameLayout(this).apply {
             setBackgroundColor(Color.BLACK)
             addView(surface, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
             addView(corner, FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT,
                 Gravity.TOP or Gravity.START).apply { setMargins(EDGE_PX, EDGE_PX, EDGE_PX, EDGE_PX) })
+            addView(packLabel, FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.TOP or Gravity.END).apply { setMargins(EDGE_PX, EDGE_PX, EDGE_PX, EDGE_PX) })
             // Up top, so it never covers the subtitles the demo is about.
             addView(status, FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT,
                 Gravity.TOP or Gravity.CENTER_HORIZONTAL).apply { topMargin = EDGE_PX * 3 })
@@ -89,6 +106,8 @@ class DenemeActivity : Activity(), SurfaceHolder.Callback {
                 val bars = insets.getInsets(WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout())
                 corner.translationX = bars.left.toFloat()
                 corner.translationY = bars.top.toFloat()
+                packLabel.translationX = -bars.right.toFloat()
+                packLabel.translationY = bars.top.toFloat()
                 view.onApplyWindowInsets(insets)
             }
         }
@@ -116,17 +135,30 @@ class DenemeActivity : Activity(), SurfaceHolder.Callback {
         leave()
     }
 
+    /** OK on the remote: the demo's game pack on or off; the line on screen is read again at once with the other. */
+    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        if (keyCode !in OK_KEYS) return super.onKeyDown(keyCode, event)
+        if (event.repeatCount == 0) {
+            Translation.demoPack = !Translation.demoPack
+            showPack()
+        }
+        return true
+    }
+
+    private fun showPack() {
+        packLabel.text = (if (Translation.demoPack) "Oyun paketi AÇIK: insan çevirisi" else "Oyun paketi KAPALI: makine çevirisi") +
+            "\nOK: paketi aç/kapat"
+    }
+
     override fun onResume() {
         super.onResume()
         resumed = true
-        Translation.screenOpen = true
         handler.post(tick)
         maybeStart()
     }
 
     override fun onPause() {
         resumed = false
-        Translation.screenOpen = false
         handler.removeCallbacks(tick)
         super.onPause()
     }
@@ -197,6 +229,11 @@ class DenemeActivity : Activity(), SurfaceHolder.Callback {
             update()
             return
         }
+        // The demo runs inside the app's service like a game; this screen is in front, so Android lets it start.
+        OlcumService.ready(this)?.let {
+            fail(it)
+            return
+        }
         val error = runCatching { Translation.start(this, demo = true) }
         when {
             error.isFailure -> fail(error.exceptionOrNull()?.message ?: "Başlatılamadı")
@@ -213,9 +250,16 @@ class DenemeActivity : Activity(), SurfaceHolder.Callback {
             return
         }
         if (!started) return
-        if (!Translation.running.get()) {
-            // Stopped on purpose (the phone or the TV screen): nothing left to show here.
-            if (Translation.note == "Kapalı") leave() else fail(Translation.note)
+        val running = Translation.running.get()
+        val waiting = Translation.waiting
+        if (!running && !waiting) {
+            // Stopped on purpose (the phone or the TV screen): nothing left to show here. Otherwise, why it ended.
+            if (Translation.phase == Phase.OFF) leave() else fail(Translation.note)
+            return
+        }
+        if (running && !Translation.demo && !waiting) {
+            // The phone started the game's translation, which takes the demo's place.
+            fail("Telefondan oyun çevirisi açıldı, deneme kapandı.")
             return
         }
         val note = Translation.note
@@ -260,11 +304,11 @@ class DenemeActivity : Activity(), SurfaceHolder.Callback {
         show("$problem\nGeri tuşuyla çık.")
     }
 
-    /** Stops the demo run this screen started, never a translation someone else started, and goes back. */
+    /** Stops the demo run this screen started (or one waiting to start), never a game's translation, and goes back. */
     private fun leave() {
         if (leaving) return
         leaving = true
-        if (started && Translation.running.get() && Translation.demo) Translation.stop()
+        if (started) Translation.stopDemo()
         finish()
     }
 

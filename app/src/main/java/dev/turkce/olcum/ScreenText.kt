@@ -161,6 +161,8 @@ class TrackedBox(val block: ScreenBlock) {
     var seen = 1
     var missed = 0
     var turkish: String? = null
+    /** Where [turkish] came from, for the ✓ of pack lines. */
+    var source = LineSource.MACHINE
 }
 
 /** Keeps a box only once it stayed put across two scans, and drops it soon after it goes away. */

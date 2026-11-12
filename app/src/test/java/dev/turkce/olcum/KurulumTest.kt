@@ -12,34 +12,68 @@ import java.io.IOException
 class KurulumTest {
     @Test
     fun theStepsFollowWhatIsDone() {
-        val none = SetupGuide.steps(remotePlay = false, account = false, chosen = "", paired = false)
-        assertEquals(listOf(false, false, false, false), none.done)
+        val none = SetupGuide.steps(newAccount = false, remotePlay = false, account = false, chosen = "", paired = false)
+        assertEquals(listOf(false, false, false, false, false), none.done)
         assertEquals(0, none.count)
         assertEquals(1, none.current)
+        // Step 3 waits for both PS5-side steps, step 5 for step 3; steps 1, 2 and 4 are never locked.
+        assertTrue(none.locks[2].contains("1. ve 2. adımı"))
+        assertTrue(none.locks[4].contains("3. adımda"))
+        assertEquals("", none.locks[0])
+        assertEquals("", none.locks[1])
+        assertEquals("", none.locks[3])
 
-        val two = SetupGuide.steps(remotePlay = true, account = true, chosen = "", paired = false)
+        val onlyFirst = SetupGuide.steps(newAccount = true, remotePlay = false, account = false, chosen = "", paired = false)
+        assertTrue(onlyFirst.locks[2].startsWith("Önce 2. adımı"))
+        assertEquals(2, onlyFirst.current)
+        val onlySecond = SetupGuide.steps(newAccount = false, remotePlay = true, account = false, chosen = "", paired = false)
+        assertTrue(onlySecond.locks[2].startsWith("Önce 1. adımı"))
+
+        val two = SetupGuide.steps(newAccount = true, remotePlay = true, account = false, chosen = "", paired = false)
         assertEquals(2, two.count)
         assertEquals(3, two.current)
+        assertEquals("", two.locks[2])
+        assertTrue(two.locks[4].isNotEmpty())
 
-        // A PS5 chosen before the account: step 2 is still the next one, and it stays open.
-        val skipped = SetupGuide.steps(remotePlay = true, account = false, chosen = "192.168.1.20", paired = false)
-        assertEquals(listOf(true, false, true, false), skipped.done)
-        assertEquals(2, skipped.current)
+        // A linked account unlocks step 5 and proves step 1 (the page asked for it first), not Remote Play.
+        val linked = SetupGuide.steps(newAccount = false, remotePlay = false, account = true, chosen = "", paired = false)
+        assertEquals(listOf(true, false, true, false, false), linked.done)
+        assertEquals("", linked.locks[4])
+        assertEquals(2, linked.current)
 
-        // An address that is not a home one does not tick step 3.
-        assertFalse(SetupGuide.steps(remotePlay = true, account = true, chosen = "8.8.8.8", paired = false).done[2])
+        // A PS5 chosen early ticks step 4 without unlocking anything else.
+        val skipped = SetupGuide.steps(newAccount = true, remotePlay = true, account = false, chosen = "192.168.1.20", paired = false)
+        assertEquals(listOf(true, true, false, true, false), skipped.done)
+        assertEquals(3, skipped.current)
 
-        // Pairing proves Remote Play and the account, even after a reinstall that lost the page's marks.
-        val paired = SetupGuide.steps(remotePlay = false, account = false, chosen = "", paired = true)
-        assertEquals(4, paired.count)
-        assertEquals(5, paired.current)
+        // An address that is not a home one does not tick step 4.
+        assertFalse(SetupGuide.steps(newAccount = true, remotePlay = true, account = true, chosen = "8.8.8.8", paired = false).done[3])
+
+        // Pairing proves every step, even after a reinstall that lost the page's marks.
+        val paired = SetupGuide.steps(newAccount = false, remotePlay = false, account = false, chosen = "", paired = true)
+        assertEquals(5, paired.count)
+        assertEquals(6, paired.current)
+        assertTrue(paired.locks.all { it.isEmpty() })
 
         val json = two.toJson()
         assertEquals(2, json.getInt("tamam"))
         assertEquals(3, json.getInt("sira"))
-        assertEquals(4, json.getJSONArray("adimlar").length())
+        assertEquals(5, json.getJSONArray("adimlar").length())
+        assertEquals(5, json.getJSONArray("kilitler").length())
         assertTrue(json.getJSONArray("adimlar").getBoolean(1))
         assertFalse(json.getJSONArray("adimlar").getBoolean(2))
+        assertEquals("", json.getJSONArray("kilitler").getString(2))
+        assertTrue(json.getJSONArray("kilitler").getString(4).isNotEmpty())
+    }
+
+    @Test
+    fun oldOrOddMarksNeverCrash() {
+        // The four-step setup stored the Remote Play mark under another key; whatever is there reads as yes or no.
+        assertTrue(SetupGuide.mark(true))
+        assertFalse(SetupGuide.mark(false))
+        assertFalse(SetupGuide.mark(null))
+        assertFalse(SetupGuide.mark("true"))
+        assertFalse(SetupGuide.mark(1))
     }
 
     @Test
@@ -104,6 +138,9 @@ class KurulumTest {
         val wrongCode = SetupGuide.pairRefused("192.168.1.20", listOf(awake))
         assertTrue(wrongCode.contains("kodu kabul etmedi"))
         assertTrue(wrongCode.contains("yeni hesap"))
+        assertTrue(wrongCode.contains("3. adımda"))
+        assertTrue(SetupGuide.pairRefused("192.168.1.20", emptyList()).contains("4. adımda"))
+        assertTrue(SetupGuide.pairRefused("192.168.1.20", listOf(resting)).contains("Cihazı Eşleştir"))
     }
 
     @Test
@@ -120,7 +157,7 @@ class KurulumTest {
         assertFalse(offline.contains("Unable"))
         assertTrue(SetupGuide.friendlyError("/api/ps5/psn", IllegalStateException("Value <html> of type java.lang.String")).contains("Sony"))
         assertTrue(SetupGuide.friendlyError("/api/ps5/bul", java.net.SocketException("Network is unreachable")).contains("Wi-Fi"))
-        assertTrue(SetupGuide.friendlyError("/api/ps5/eslestir", NullPointerException()).contains("Cihaz Bağla"))
+        assertTrue(SetupGuide.friendlyError("/api/ps5/eslestir", NullPointerException()).contains("Cihazı Eşleştir"))
         assertTrue(SetupGuide.friendlyError("/api/ps5/uyandir", RuntimeException("timeout")).contains("PS tuşuna"))
         assertTrue(SetupGuide.friendlyError("/api/paket/indir", IOException("HTTP 404")).contains("internet"))
         assertEquals("İşlem yapılamadı. Sayfayı yenileyip tekrar dene.", SetupGuide.friendlyError("/api/ceviri", RuntimeException()))

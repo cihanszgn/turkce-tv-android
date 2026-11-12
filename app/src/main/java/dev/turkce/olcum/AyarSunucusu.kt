@@ -108,19 +108,30 @@ class HttpRequest(val method: String, val path: String, val query: Map<String, S
         private const val MAX_HEAD = 8 * 1024
         const val MAX_BODY = 32 * 1024
 
-        /** Null for an empty or broken request. [bodyLimit] sees the request line before any body is read. */
-        fun read(input: InputStream, bodyLimit: (HttpRequest) -> Int = { MAX_BODY }): HttpRequest? {
+        /**
+         * Null for an empty or broken request. [bodyLimit] sees the request line before any body is read; a body over
+         * the limit is left unread and [tooBig] hears of it with the request line and the announced length.
+         */
+        fun read(
+            input: InputStream,
+            tooBig: (HttpRequest, Int) -> Unit = { _, _ -> },
+            bodyLimit: (HttpRequest) -> Int = { MAX_BODY },
+        ): HttpRequest? {
             val head = readHead(input) ?: return null
             val lines = head.split("\r\n")
             val parts = lines.first().split(' ')
             if (parts.size < 3) return null
             val length = lines.drop(1)
                 .firstOrNull { it.startsWith("content-length:", ignoreCase = true) }
-                ?.substringAfter(':')?.trim()?.toIntOrNull() ?: 0
+                ?.substringAfter(':')?.trim()?.let { it.toLongOrNull() ?: return null } ?: 0L
             val target = parts[1]
             val bare = HttpRequest(parts[0].uppercase(), target.substringBefore('?'), query(target.substringAfter('?', "")))
-            if (length !in 0..bodyLimit(bare)) return null
-            val body = ByteArray(length)
+            if (length < 0) return null
+            if (length > bodyLimit(bare)) {
+                tooBig(bare, length.coerceAtMost(Int.MAX_VALUE.toLong()).toInt())
+                return null
+            }
+            val body = ByteArray(length.toInt())
             DataInputStream(input).readFully(body)
             return HttpRequest(bare.method, bare.path, bare.query, body)
         }
@@ -174,14 +185,21 @@ internal class BoundedWorkers(workers: Int, waiting: Int, name: String) {
 }
 
 /**
- * The phone settings page, served on the home network while it is in use. The address carries a random key,
- * shown only in the TV's QR code; the server stops after a quarter hour without requests.
+ * The phone settings page, served on the home network by the app's service ([OlcumService]) for as long as it runs.
+ * The address carries a random key, shown only in the TV's QR code, and the key stays the same while the service
+ * lives, so the phone's page keeps working after the game takes the screen. With the translation off and no request
+ * for four hours, the server stops and lets the service go; the TV screen starts both again with a new key.
  */
 internal object AyarSunucusu {
     const val PORT = 8095
     private const val PORT_TRIES = 10
-    private const val IDLE_MS = 15 * 60_000L
+    private const val IDLE_MS = 4 * 60 * 60_000L
     private const val CHECK_MS = 30_000L
+    /** An upload over the limit is read and thrown away up to this much, so the phone sees the answer, not a cut line. */
+    private const val MAX_DRAIN = 256L * 1024 * 1024
+    private const val DRAIN_MS = 60_000L
+    private const val TOO_BIG = "Dosya çok büyük: en fazla 30 MB olabilir. Büyük yamalarda yalnız Türkçe dosyayı ya da .zip'ini yükle."
+    private const val GONE = "Bağlantı kapandı. TV'de Tv Türkçe Altyazı'yı aç, QR'ı yeniden okut."
     private const val SOCKET_TIMEOUT_MS = 10_000
     private const val TOKEN_CHARS = "abcdefghjkmnpqrstuvwxyz23456789"
     private const val TOKEN_LENGTH = 12
@@ -208,9 +226,16 @@ internal object AyarSunucusu {
             server = socket
             port = socket.localPort
             thread(isDaemon = true, name = "ayar-sunucu") { accept(socket, app) }
-            thread(isDaemon = true, name = "ayar-bekci") { watch(socket) }
+            thread(isDaemon = true, name = "ayar-bekci") { watch(socket, app) }
         }
         return "http://$address:$port/?t=$token"
+    }
+
+    /** Closes the server at once (the service ended); the next [start] opens it again with a new key. */
+    @Synchronized
+    fun stopNow() {
+        server?.let { runCatching { it.close() } }
+        server = null
     }
 
     /** The usual port, or one of the next few when another app on the TV already holds it. */
@@ -236,11 +261,18 @@ internal object AyarSunucusu {
         if (server === socket) server = null
     }
 
-    private fun watch(socket: ServerSocket) {
+    private fun watch(socket: ServerSocket, app: Context) {
         while (!socket.isClosed) {
             Thread.sleep(CHECK_MS)
-            // While the game is translated the phone must still be able to stop it, so the page stays reachable.
-            if (System.currentTimeMillis() - lastUse > IDLE_MS && !Translation.running.get()) stop(socket)
+            if (System.currentTimeMillis() - lastUse <= IDLE_MS) continue
+            // While the game is translated the phone must still be able to stop it, so nothing ends then. The switch's
+            // own lock keeps a start from slipping in between the look and the stop.
+            synchronized(Translation) {
+                if (!Translation.running.get() && System.currentTimeMillis() - lastUse > IDLE_MS) {
+                    stop(socket)
+                    OlcumService.stop(app)
+                }
+            }
         }
     }
 
@@ -259,15 +291,21 @@ internal object AyarSunucusu {
     private fun serve(client: Socket, context: Context) {
         client.soTimeout = SOCKET_TIMEOUT_MS
         val out = client.getOutputStream()
-        // Only a request carrying the key may send a whole translation file.
+        val input = client.getInputStream()
+        // Only a request carrying the key may send a whole translation file. A file over the limit gets a plain answer.
+        var oversize = 0
         val request = runCatching {
-            HttpRequest.read(client.getInputStream()) { bare ->
-                if (allowed(bare) && bare.path == "/api/paket/yukle") PackStore.MAX_BYTES else HttpRequest.MAX_BODY
+            HttpRequest.read(input, { bare, length -> if (isUpload(bare)) oversize = length }) { bare ->
+                if (isUpload(bare)) PackStore.MAX_BYTES else HttpRequest.MAX_BODY
             }
-        }.getOrNull() ?: return respond(out, 400, "text/plain", "Bozuk istek")
-        if (!allowed(request)) {
-            return respond(out, 403, "text/plain; charset=utf-8", "Bağlantı süresi doldu. TV'deki QR kodu yeniden okut.")
+        }.getOrNull()
+        if (request == null) {
+            if (oversize == 0) return respond(out, 400, "text/plain", "Bozuk istek")
+            respond(out, 413, "application/json; charset=utf-8", JSONObject().put("error", TOO_BIG).toString())
+            return drain(input, oversize)
         }
+        // An old key (the service ended since the QR was read) says what to do, not just "forbidden".
+        if (!allowed(request)) return respond(out, 403, "text/plain; charset=utf-8", GONE)
         lastUse = System.currentTimeMillis()
         val prefs = SettingsStore.prefs(context)
         when {
@@ -297,13 +335,51 @@ internal object AyarSunucusu {
 
     private fun allowed(request: HttpRequest) = MessageDigest.isEqual((request.query["t"] ?: "").toByteArray(), token.toByteArray())
 
-    /** Game packs: search, look inside a repository, download, upload from the phone, choose, delete. */
+    private fun isUpload(request: HttpRequest) = allowed(request) && request.path == "/api/paket/yukle"
+
+    /** Reads and drops what the phone is still sending, within limits, so its browser shows the answer already sent. */
+    private fun drain(input: InputStream, length: Int) {
+        val buffer = ByteArray(64 * 1024)
+        var left = minOf(length.toLong(), MAX_DRAIN)
+        val end = System.currentTimeMillis() + DRAIN_MS
+        runCatching {
+            while (left > 0 && System.currentTimeMillis() < end) {
+                val n = input.read(buffer, 0, minOf(buffer.size.toLong(), left).toInt())
+                if (n < 0) break
+                left -= n
+            }
+        }
+    }
+
+    /**
+     * The pack list with what the TV has in use: the active pack as read into memory, whether its lines get a ✓, and,
+     * after an upload or a download, what was read from the file.
+     */
+    private fun packJson(context: Context, prefs: android.content.SharedPreferences, result: JSONObject? = null): String {
+        ActivePack.reload(context)
+        return JSONObject(PackStore.listJson(context, prefs))
+            .put("etkin", ActivePack.toJson())
+            .put("isaret", PackMark.on(context))
+            .apply { if (result != null) put("sonuc", result) }
+            .toString()
+    }
+
+    /** Puts a new pack in use and tells the TV and the phone what came in. */
+    private fun added(context: Context, prefs: android.content.SharedPreferences, info: PackInfo, file: String): String {
+        val pack = ActivePack.choose(context, prefs, info.id)
+        PackToast.show(context, PackToast.text("yüklendi", pack.info, pack.size))
+        val result = JSONObject().put("id", info.id).put("oyun", info.game).put("satir", pack.size).put("dosya", file)
+            .put("cevirmen", info.credit)
+        return packJson(context, prefs, result)
+    }
+
+    /** Game packs: search, look inside a repository, download, upload from the phone, choose, delete, the ✓ mark. */
     private fun packs(request: HttpRequest, out: OutputStream, context: Context, prefs: android.content.SharedPreferences) {
         val json = "application/json; charset=utf-8"
         try {
             val body = if (request.method == "POST" && request.path != "/api/paket/yukle" && request.body.isNotBlank()) JSONObject(request.body) else JSONObject()
             when ("${request.method} ${request.path}") {
-                "GET /api/paket" -> respond(out, 200, json, PackStore.listJson(context, prefs))
+                "GET /api/paket" -> respond(out, 200, json, packJson(context, prefs))
                 "GET /api/paket/ara" -> {
                     val game = request.query["q"] ?: ""
                     val results = runCatching { YamaArama.search(game) }
@@ -320,26 +396,39 @@ internal object AyarSunucusu {
                     val repo = YamaArama.repo(body.optString("repo"))
                     val path = body.optString("path")
                     val bytes = YamaArama.download(repo, path)
-                    val info = PackStore.add(context, path.substringAfterLast('/'), bytes, body.optString("game"),
+                    val file = path.substringAfterLast('/')
+                    val info = PackStore.add(context, file, bytes, body.optString("game"),
                         repo.repo.substringBefore('/'), repo.url, repo.license, YamaArama.funding(repo))
-                    PackStore.select(prefs, info.id)
-                    respond(out, 200, json, PackStore.listJson(context, prefs))
+                    respond(out, 200, json, added(context, prefs, info, file))
                 }
                 "POST /api/paket/yukle" -> {
-                    val info = PackStore.add(context, request.query["dosya"] ?: "", request.bytes, request.query["oyun"] ?: "",
+                    val file = request.query["dosya"] ?: ""
+                    val info = PackStore.add(context, file, request.bytes, request.query["oyun"] ?: "",
                         request.query["cevirmen"] ?: "", request.query["kaynak"] ?: "", "", request.query["bagis"] ?: "")
-                    PackStore.select(prefs, info.id)
-                    respond(out, 200, json, PackStore.listJson(context, prefs))
+                    respond(out, 200, json, added(context, prefs, info, file))
                 }
                 "POST /api/paket/sec" -> {
-                    val id = body.optString("id")
-                    require(id.isEmpty() || PackStore.list(context).any { it.id == id }) { "Paket bulunamadı." }
-                    PackStore.select(prefs, id)
-                    respond(out, 200, json, PackStore.listJson(context, prefs))
+                    val pack = ActivePack.choose(context, prefs, body.optString("id"))
+                    PackToast.show(context, if (pack.size == 0) {
+                        "Oyun paketi kapatıldı: oyun metni makine çevirisiyle çevrilecek"
+                    } else {
+                        PackToast.text("seçildi", pack.info, pack.size)
+                    })
+                    respond(out, 200, json, packJson(context, prefs))
                 }
                 "POST /api/paket/sil" -> {
-                    PackStore.remove(context, prefs, body.optString("id"))
-                    respond(out, 200, json, PackStore.listJson(context, prefs))
+                    val id = body.optString("id")
+                    val gone = PackStore.list(context).firstOrNull { it.id == id }
+                    val wasActive = ActivePack.pack.info.id == id && id.isNotEmpty()
+                    PackStore.remove(context, prefs, id)
+                    if (gone != null) {
+                        PackToast.show(context, "Oyun paketi silindi: ${gone.game}" + if (wasActive) " · artık makine çevirisi" else "")
+                    }
+                    respond(out, 200, json, packJson(context, prefs))
+                }
+                "POST /api/paket/isaret" -> {
+                    PackMark.set(context, body.optBoolean("acik", true))
+                    respond(out, 200, json, packJson(context, prefs))
                 }
                 else -> respond(out, 404, "text/plain", "Yok")
             }
@@ -352,8 +441,11 @@ internal object AyarSunucusu {
     private fun controls(request: HttpRequest, out: OutputStream, context: Context) {
         val json = "application/json; charset=utf-8"
         // Every answer carries the setup steps too, so the page's ticks follow each button at once and survive a reload.
+        // The run's line sources and last lines live in memory only and go to this page only, never to a file.
         fun stateJson() = Translation.toJson(context).let {
             it.put("girisAdresi", Ps5Setup.loginUrl).put("kurulum", SetupGuide.toJson(context, it.getJSONObject("ps5"), localAddress()))
+                .put("oturum", LineStats.toJson())
+                .put("paket", JSONObject().put("etkin", ActivePack.toJson()).put("isaret", PackMark.on(context)))
         }
         fun state() = stateJson().toString()
         try {
@@ -362,8 +454,11 @@ internal object AyarSunucusu {
                 "GET /api/durum" -> respond(out, 200, json, state())
                 "POST /api/ceviri" -> {
                     when (body.optString("islem")) {
-                        "baslat" -> {
-                            require(Ps5Setup.status(context).getBoolean("eslesti")) { "Önce PlayStation ile eşleştir (aşağıdaki adımlar)." }
+                        // Debug builds only: the demo clip from the phone, to try the switch without a PS5.
+                        "baslat" -> if (BuildConfig.DEBUG && body.optBoolean("deneme")) {
+                            Translation.start(context, demo = true)
+                        } else {
+                            require(Ps5Setup.status(context).getBoolean("eslesti")) { "Önce PS5 ile eşleştir (5. adım)." }
                             Translation.start(context)
                         }
                         "durdur" -> Translation.stop()
@@ -375,12 +470,20 @@ internal object AyarSunucusu {
                 }
                 "GET /api/ps5/bul" -> {
                     val found = Ps5Setup.discover()
-                    // One PS5 at home is the one: step 3 is done without a tap. Several wait for the phone to pick.
+                    // One PS5 at home is the one: step 4 is done without a tap. Several wait for the phone to pick.
                     found.singleOrNull()?.let { SetupGuide.choose(context, it.address) }
                     respond(out, 200, json, stateJson().put("bulunan", JSONArray(found.map { it.toJson() })).toString())
                 }
                 "POST /api/ps5/kurulum" -> {
-                    if (body.has("uzaktanOynatma")) SetupGuide.markRemotePlay(context, body.getBoolean("uzaktanOynatma"))
+                    if (body.optBoolean("bastan")) {
+                        // Start over: the account number, the PS5 keys and every tick go; the PS5 side stays as it is.
+                        // Not under a running PS5 session, which still uses those keys; the demo needs none.
+                        check(!Translation.running.get() || Translation.demo) { "Önce çeviriyi kapat, sonra kurulumu baştan başlat." }
+                        Ps5Setup.forget(context)
+                        SetupGuide.reset(context)
+                    }
+                    if (body.has("yeniHesap")) SetupGuide.markNewAccount(context, body.getBoolean("yeniHesap"))
+                    if (body.has("uzaktanOynama")) SetupGuide.markRemotePlay(context, body.getBoolean("uzaktanOynama"))
                     if (body.has("adres")) SetupGuide.choose(context, body.getString("adres"))
                     respond(out, 200, json, state())
                 }
@@ -407,12 +510,13 @@ internal object AyarSunucusu {
                         throw IllegalStateException(SetupGuide.pairRefused(host, found), refused)
                     }
                     SetupGuide.choose(context, host)
-                    // Pairing needs Remote Play on, so step 1 stays ticked even if the pairing is forgotten later.
+                    // A pairing proves steps 1 and 2 (it is done on the new account with Remote Play on): they stay ticked.
+                    SetupGuide.markNewAccount(context, true)
                     SetupGuide.markRemotePlay(context, true)
                     respond(out, 200, json, state())
                 }
                 "POST /api/ps5/uyandir" -> {
-                    check(Ps5Setup.status(context).getBoolean("eslesti")) { "Önce PlayStation'ı eşleştir (4. adım)." }
+                    check(Ps5Setup.status(context).getBoolean("eslesti")) { "Önce PS5'i eşleştir (5. adım)." }
                     check(Ps5Setup.wake(context)) { "PS5'e uyandırma gönderilemedi. Kumandadaki PS tuşuna basarak PS5'i elle aç." }
                     respond(out, 200, json, state())
                 }
@@ -430,7 +534,7 @@ internal object AyarSunucusu {
     private fun respond(out: OutputStream, code: Int, type: String, body: String) = respond(out, code, type, body.toByteArray())
 
     private fun respond(out: OutputStream, code: Int, type: String, body: ByteArray) {
-        val reason = mapOf(200 to "OK", 400 to "Bad Request", 403 to "Forbidden", 404 to "Not Found")[code] ?: "Error"
+        val reason = mapOf(200 to "OK", 400 to "Bad Request", 403 to "Forbidden", 404 to "Not Found", 413 to "Payload Too Large")[code] ?: "Error"
         out.write(("HTTP/1.1 $code $reason\r\nContent-Type: $type\r\nContent-Length: ${body.size}\r\n" +
             "Cache-Control: no-store\r\nConnection: close\r\n\r\n").toByteArray(Charsets.ISO_8859_1))
         out.write(body)

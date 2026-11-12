@@ -76,16 +76,6 @@ class HakkindaActivity : Activity() {
         loadComponents()
     }
 
-    override fun onResume() {
-        super.onResume()
-        Translation.screenOpen = true
-    }
-
-    override fun onPause() {
-        Translation.screenOpen = false
-        super.onPause()
-    }
-
     /** The component list comes from the licence file in the APK, read off the main thread. */
     private fun loadComponents() {
         thread(isDaemon = true, name = "hakkinda") {

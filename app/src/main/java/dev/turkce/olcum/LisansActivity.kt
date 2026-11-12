@@ -96,16 +96,6 @@ class LisansActivity : Activity() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        Translation.screenOpen = true
-    }
-
-    override fun onPause() {
-        Translation.screenOpen = false
-        super.onPause()
-    }
-
     /** Right goes to the next licence, left to the start of this one or the one before. */
     private fun jump(code: Int): Boolean {
         val here = list.selectedItemPosition.coerceAtLeast(0)

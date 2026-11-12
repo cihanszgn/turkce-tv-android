@@ -56,7 +56,23 @@
   output { min-width:44px; text-align:right; color:var(--dim); }
   .not { color:var(--dim); font-size:16px; margin:6px 0; }
   .buyuk { font-size:18px; font-weight:700; }
-  #ceviriDurum { padding:12px 14px; border-radius:10px; background:var(--panel2); }
+  #ceviriDurum { margin:8px 0 0; color:var(--dim); font-size:16px; }
+  #ceviriKart.acik { border-color:var(--ok); }
+  #ceviriKart.hata { border-color:var(--err); }
+  /* The one on/off switch: the whole row is the button, the track on the left shows the state. */
+  button.anahtar { display:flex; align-items:center; gap:14px; width:100%; min-height:72px; padding:12px 16px; font-size:20px; text-align:left; border-width:2px; }
+  .anahtar .ray { flex:none; position:relative; width:64px; height:36px; border-radius:18px; background:var(--line); transition:background .15s; }
+  .anahtar .ray::after { content:""; position:absolute; top:4px; left:4px; width:28px; height:28px; border-radius:50%; background:#fff; transition:left .15s; }
+  .anahtar[aria-checked=true] { border-color:var(--ok); }
+  .anahtar[aria-checked=true] .ray { background:var(--ok); }
+  .anahtar[aria-checked=true] .ray::after { left:32px; }
+  .anahtar.bekle { border-color:var(--warn); }
+  .anahtar.bekle .ray { background:#7a5a2c; }
+  .anahtar.bekle .ray::after { left:18px; animation:nabiz 1s ease-in-out infinite alternate; }
+  @keyframes nabiz { to { opacity:.4; } }
+  .anahtar.hata { border-color:var(--err); }
+  .kilit-not { margin:8px 0; padding:10px 12px; border-radius:10px; border:1px solid var(--line); background:var(--bg); color:var(--text); font-size:16px; }
+  .kilit-not.uyar { border-color:var(--err); animation:salla .45s; }
   .dugmeler button { flex:1 1 90px; }
   #sahne { position:relative; width:100%; aspect-ratio:16/9; background:#1c222a center/100% 100% no-repeat; border:1px solid var(--line); border-radius:10px; touch-action:none; overflow:hidden; user-select:none; }
   .alan { position:absolute; border:2px solid var(--sub); background:rgba(80,200,255,.12); }
@@ -160,6 +176,34 @@
   .hazir { margin:14px 0 0; padding:16px; border-radius:14px; border:2px solid var(--ok); background:rgba(94,224,138,.07); scroll-margin-top:120px; }
   .hazir h3 { margin:0 0 10px; font-size:20px; color:var(--ok); }
   button.kocaman { width:100%; min-height:64px; font-size:21px; }
+  .adim.kilit .no { color:var(--dim); font-size:17px; }
+  .adim.kilit .adim-ozet { color:var(--dim); }
+  #ilerlemeUst { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; }
+  #bastan { min-height:40px; padding:6px 12px; font-size:16px; }
+
+  /* Game pack: the pack in use, where this session's lines came from, the upload's progress. */
+  .etkin-paket { margin:8px 0 12px; padding:12px 14px; border-radius:10px; background:var(--panel2); border-left:4px solid var(--line); font-size:17px; }
+  .etkin-paket.var { border-left-color:var(--ok); }
+  .etkin-paket b { color:var(--ok); }
+  .rozet { display:inline-block; flex:none; font-size:14px; font-weight:700; padding:1px 8px; border-radius:999px; border:1px solid; white-space:nowrap; }
+  .rozet.paket { color:#bff3cd; border-color:#3f7d52; background:rgba(94,224,138,.12); }
+  .rozet.sozluk { color:#ffe48a; border-color:#8a7426; background:rgba(255,216,77,.1); }
+  .rozet.bellek { color:#a9dcff; border-color:#3b6f96; background:rgba(80,200,255,.1); }
+  .rozet.makine { color:var(--dim); border-color:var(--line); background:var(--bg); }
+  .sayaclar { display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; margin:8px 0; }
+  .sayac { padding:8px 4px; border-radius:10px; background:var(--panel2); text-align:center; }
+  .sayac b { display:block; font-size:22px; font-variant-numeric:tabular-nums; }
+  .sayac span { font-size:14px; color:var(--dim); }
+  .sayac.paket b { color:var(--ok); }
+  .son-satirlar { list-style:none; padding:0; margin:8px 0; }
+  .son-satirlar li { display:flex; gap:8px; align-items:flex-start; padding:6px 0; border-top:1px solid var(--line); font-size:16px; overflow-wrap:anywhere; }
+  #paketler .kart.aktif { border:2px solid var(--ok); background:rgba(94,224,138,.06); }
+  .etiket-kullanilan { display:inline-block; margin-bottom:6px; padding:2px 10px; border-radius:999px; background:var(--ok); color:#06240f; font-size:14px; font-weight:800; letter-spacing:.04em; }
+  .dosya.etkin { border:2px solid var(--ok); border-radius:10px; padding:8px 10px; background:rgba(94,224,138,.07); }
+  .yukleme { height:10px; border-radius:5px; background:var(--line); overflow:hidden; margin:8px 0 4px; }
+  .yukleme i { display:block; height:100%; width:0; background:var(--accent); transition:width .2s; }
+  .yukleme.belirsiz i { width:35%; animation:kay 1.1s ease-in-out infinite; }
+  @keyframes kay { from { transform:translateX(-100%); } to { transform:translateX(290%); } }
 </style>
 </head>
 <body>
@@ -169,15 +213,15 @@
     <div id="durum" role="status">Yükleniyor…</div>
   </header>
 
-  <section class="kart">
+  <section class="kart" id="ceviriKart">
     <h2><span class="ikon">▶</span>Çeviri</h2>
-    <div id="ceviriDurum" class="buyuk">…</div>
-    <p class="not">PlayStation ekranındaki altyazıyı okur, Türkçesini TV'de gösterir: oyunlarda ve PlayStation'da izlediğin film ve dizilerde.</p>
-    <div class="satir dugmeler">
-      <button id="baslat" class="ana">Başlat</button>
-      <button id="duraklat">Duraklat</button>
-      <button id="durdur">Durdur</button>
-    </div>
+    <div class="satir" data-sonuc><button id="anahtar" class="anahtar" role="switch" aria-checked="false" disabled><span class="ray" aria-hidden="true"></span><span id="anahtarYazi">Yükleniyor…</span></button></div>
+    <div id="ceviriDurum"></div>
+    <div id="ceviriNeden" class="sonuc kotu" role="alert" hidden></div>
+    <div id="ceviriKilit" class="kilit-not" hidden>🔒 Önce PS5'i eşleştir: aşağıdaki <a href="#ps5Kart">PlayStation bağlantısı</a> bölümünde 5 adımı bitir.</div>
+    <div id="denemeNot" class="bilgi" hidden><b>Deneme modu:</b> anahtar, PS5 yerine TV'deki deneme videosunu açar (yalnız geliştirici sürümünde).</div>
+    <div class="satir" id="duraklatSatir" hidden><button id="duraklat">Duraklat</button></div>
+    <p class="not">Anahtarı aç: TV PlayStation'a bağlanır, ekrandaki İngilizce altyazıyı okur, Türkçesini TV'de gösterir. Oyunlarda ve PlayStation'da izlediğin film ve dizilerde çalışır. Kapatınca TV bekleme durumuna döner; bu sayfadan yeniden açabilirsin.</p>
     <div class="satir"><label class="secenek"><input id="skipIntro" type="checkbox">Oyun açılışındaki yapımcı, telif ve uyarı yazılarını çevirme</label></div>
     <p class="not">Açılış yazıları yine de çevrilirse "Duraklat"a bas, oyun başlayınca "Devam"a bas. Duraklatınca TV'deki yazılar hemen silinir.</p>
   </section>
@@ -185,131 +229,154 @@
   <section class="kart" id="ps5Kart">
     <h2><span class="ikon">🎮</span>PlayStation bağlantısı</h2>
     <div id="ps5Ozet" data-sonuc><span id="ps5OzetYazi">…</span><button id="uyandir" hidden>PS5'i uyandır</button></div>
-    <div id="ilerleme">
-      <div id="ilerlemeYazi">4 adımdan 0'ı tamam</div>
-      <div class="cubuk" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    <div id="ilerleme" data-sonuc>
+      <div id="ilerlemeUst"><span id="ilerlemeYazi">5 adımdan 0'ı tamam</span><button id="bastan" class="tehlike" hidden>Baştan başla</button></div>
+      <div class="cubuk" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
     </div>
-    <p class="not">Bir kerelik kurulum, yaklaşık 10 dakika. Telefonu ve PS5 kumandasını yanında tut. Biten adımın numarası yeşil ✓ olur ve adım kapanır; sıradaki adım sarı çerçeveyle açılır. Bir adımın başlığına dokunarak onu açıp kapatabilirsin.</p>
+    <p class="not">Bir kerelik kurulum, yaklaşık 15 dakika. Telefonu ve PS5 kumandasını yanında tut. Biten adımın numarası yeşil ✓ olur ve adım kapanır; sıradaki adım sarı çerçeveyle açılır. Kilitli adımda (🔒) neden kilitli olduğu yazar. Bir adımın başlığına dokunarak onu açıp kapatabilirsin; biten adımı da yeniden açıp okuyabilirsin.</p>
 
     <ol class="adimlar">
       <li class="adim sira acik" id="adim1">
-        <button type="button" class="adim-bas" aria-expanded="true" aria-controls="adim1g"><span class="no">1</span><span class="adim-baslik"><b>PS5'te Uzaktan Oynatma'yı aç</b><span class="adim-ozet">Sıradaki adım</span></span><span class="ok-isaret" aria-hidden="true">▾</span></button>
+        <button type="button" class="adim-bas" aria-expanded="true" aria-controls="adim1g"><span class="no">1</span><span class="adim-baslik"><b>PS5'te yeni, ayrı bir PSN hesabı aç</b><span class="adim-ozet">Sıradaki adım</span></span><span class="ok-isaret" aria-hidden="true">▾</span></button>
         <div class="adim-govde" id="adim1g">
+          <div class="dikkat-kutu" role="note">
+            <b class="baslik">⚠ Ana hesabını burada kullanma</b>
+            Bu kurulum için <b>yeni, ayrı ve ücretsiz</b> bir PSN hesabı aç. Oyunlarını oynadığın hesabın e-postasını ve şifresini bu kurulumda <b>hiçbir yere yazma</b>.
+            <ul>
+              <li><b>Neden?</b> Bu bağlantı Sony'nin resmî uygulaması değil; Sony bunu kurallarına aykırı sayabilir. Bir sorun çıkarsa ana hesabın değil, bu yeni hesap etkilenir.</li>
+              <li>Kurulum bitince PS5'te yine <b>ana hesabınla</b> oynarsın; yeni hesap yalnız görüntüyü TV'deki uygulamaya aktarır. Denemede ana hesapla oyun oynanırken TV yeni hesabı kullandı, oyun kesilmedi.</li>
+              <li>Yeni hesap oyun oynamaz, satın alma yapmaz: ona ödeme kartı ekleme.</li>
+            </ul>
+          </div>
           <div class="yerler"><span class="yer konsol">🎮 Konsolda</span></div>
           <ol class="yap">
-            <li>PS5'i aç, ana ekrana gel.</li>
-            <li>Ana ekranın sağ üst köşesindeki <b>Ayarlar</b> simgesine (dişli çark) gir.</li>
-            <li><b>Sistem</b>'i, sonra <b>Uzaktan Oynatma</b>'yı seç.</li>
-            <li><b>Uzaktan Oynatmayı Etkinleştir</b> düğmesini aç.</li>
-            <li>Telefona dön, aşağıdaki <b>Yaptım</b> düğmesine bas.</li>
+            <li>PS5 kumandasında <b>PS tuşuna</b> bas. Açılan menüde sağ üstteki <b>profil resmine</b> gir.</li>
+            <li><b>Kullanıcı Değiştir</b>'i seç.</li>
+            <li>Kullanıcı seçme ekranında <b>Kullanıcı Ekle</b>'yi, sonra <b>Başlayın</b>'ı seç.</li>
+            <li><b>Hesap Oluştur</b>'u seç. Ana hesabının <b>kullanmadığı bir e-posta adresi</b> yaz (yoksa önce telefondan yeni bir e-posta adresi aç), şifre belirle, formu bitir. Hesap <b>ücretsizdir</b>; ödeme bilgisi verme, kart ekleme.</li>
+            <li>O e-posta adresine Sony'den gelen <b>doğrulama e-postasını</b> aç, içindeki onay bağlantısına bas.</li>
+            <li>PS5'in ana ekranı <b>yeni kullanıcıyla</b> açılınca bu adım biter. PS5'te bu hesapta kal: 2. ve 5. adım da bu hesapta yapılır.</li>
           </ol>
-          <span class="yol">PS5: Ayarlar → Sistem → Uzaktan Oynatma → Uzaktan Oynatmayı Etkinleştir</span>
-          <div class="not">İngilizce menüde: Settings → System → Remote Play → Enable Remote Play.</div>
+          <span class="yol">PS5: PS tuşu → profil resmi → Kullanıcı Değiştir → Kullanıcı Ekle → Başlayın → Hesap Oluştur</span>
+          <div class="not">İngilizce menüde: Switch User → Add User → Get Started → Create an Account.</div>
           <figure class="cizim">
-            <svg viewBox="0 0 300 172" role="img" aria-label="Temsili çizim: Uzaktan Oynatma ayarında açık duran Etkinleştir düğmesi">
-              <rect x="2" y="2" width="296" height="168" rx="10" fill="#0f151c" stroke="#3a4b5c" stroke-width="3"/>
-              <text x="16" y="30" fill="#93a4b5" font-size="14">Ayarlar › Sistem › Uzaktan Oynatma</text>
-              <rect x="14" y="44" width="272" height="56" rx="8" fill="#1c2935" stroke="#ffd84d" stroke-width="3"/>
-              <text x="26" y="68" fill="#eef2f6" font-size="15">Uzaktan Oynatmayı</text>
-              <text x="26" y="88" fill="#eef2f6" font-size="15">Etkinleştir</text>
-              <rect x="220" y="59" width="52" height="26" rx="13" fill="#5ee08a"/>
-              <circle cx="259" cy="72" r="10" fill="#fff"/>
-              <rect x="14" y="110" width="272" height="40" rx="8" fill="#16212b"/>
-              <text x="26" y="135" fill="#6f8091" font-size="14">Cihaz Bağla</text>
-              <text x="246" y="164" text-anchor="middle" fill="#ffd84d" font-size="13" font-weight="700">↑ açık</text>
+            <svg viewBox="0 0 300 150" role="img" aria-label="Temsili çizim: kullanıcı seçme ekranında ana hesap ve Kullanıcı Ekle kutusu">
+              <rect x="2" y="2" width="296" height="146" rx="10" fill="#0f151c" stroke="#3a4b5c" stroke-width="3"/>
+              <circle cx="90" cy="64" r="28" fill="#3b6f96"/>
+              <circle cx="90" cy="56" r="9" fill="#cfe9ff"/>
+              <path d="M73 80a17 13 0 0 1 34 0z" fill="#cfe9ff"/>
+              <text x="90" y="118" text-anchor="middle" fill="#eef2f6" font-size="15">Ana hesabın</text>
+              <circle cx="210" cy="64" r="28" fill="none" stroke="#ffd84d" stroke-width="3" stroke-dasharray="7 5"/>
+              <text x="210" y="75" text-anchor="middle" fill="#ffd84d" font-size="32" font-weight="700">+</text>
+              <text x="210" y="118" text-anchor="middle" fill="#ffd84d" font-size="15" font-weight="700">Kullanıcı Ekle</text>
             </svg>
-            <figcaption>Temsili çizim, gerçek ekran değil. Sarı çerçeveli satırdaki düğme açık olmalı.</figcaption>
+            <figcaption>Temsili çizim, gerçek ekran değil: "Kullanıcı Değiştir"den sonra açılan kullanıcı seçme ekranı. Sarı kutu "Kullanıcı Ekle".</figcaption>
           </figure>
-          <div class="anla"><b>Bittiğini nasıl anlarsın:</b> PS5'te düğme açık görünür. "Yaptım"a basınca bu adımın numarası yeşil ✓ olur ve 2. adım açılır.</div>
-          <details class="ic"><summary>PS5'i TV'den uyandırmak istersen (isteğe bağlı)</summary>
-            <span class="yol">PS5: Ayarlar → Sistem → Güç Tasarrufu → Dinlenme Modunda Kullanılabilen Özellikler → "İnternete Bağlı Kal" ve "Ağ Üzerinden PS5'i Açmayı Etkinleştir"</span>
+          <details class="ic"><summary>Başka yol: hesabı telefondan aç</summary>
+            <div class="yerler"><span class="yer telefon">📱 Telefonda</span><span class="yer konsol">🎮 Konsolda</span></div>
+            <ol class="yap">
+              <li>Telefonda Sony'nin hesap yönetimi sayfasını aç, <b>Yeni Hesap Oluştur</b>'u seç. Ana hesabının kullanmadığı bir e-posta yaz, doğrulama e-postasını onayla.</li>
+              <li>PS5'te PS tuşu → profil resmi → <b>Kullanıcı Değiştir</b> → <b>Kullanıcı Ekle</b> → <b>Başlayın</b>; yeni hesabın e-postası ve şifresiyle giriş yap.</li>
+            </ol>
           </details>
-          <div class="not">Menü adları dile göre biraz farklı olabilir. PS5 ve TV aynı modeme bağlı olmalı.</div>
-          <div class="satir" data-sonuc><button id="yaptim" class="ana">Yaptım, Uzaktan Oynatma açık</button><button id="yaptimGeri" hidden>Henüz yapmadım, geri al</button></div>
+          <div class="anla"><b>Bittiğini nasıl anlarsın:</b> PS5'in ana ekranı yeni kullanıcıyla açıktır; PS tuşuna basınca sağ üstte yeni hesabın profil resmi görünür.</div>
+          <label class="onay" id="onayEtiket"><input type="checkbox" id="ayriHesap"><span>Yeni, ayrı bir hesap açtım; ana hesabımı girmeyeceğim</span></label>
+          <div id="hesapDugmeler" class="kilitli">
+            <p id="kilitNot" class="not">Düğme, yukarıdaki sarı kutuyu işaretleyince açılır.</p>
+            <div class="satir" data-sonuc><button id="yeniHesapBtn" class="ana">Yeni hesabı açtım ve PS5'te şu an o hesaptayım</button><button id="yeniHesapGeri" hidden>Henüz yapmadım, geri al</button></div>
+          </div>
         </div>
       </li>
 
       <li class="adim" id="adim2">
-        <button type="button" class="adim-bas" aria-expanded="false" aria-controls="adim2g"><span class="no">2</span><span class="adim-baslik"><b>Uzaktan oynatma için AYRI bir PSN hesabı aç ve bağla</b><span class="adim-ozet"></span></span><span class="ok-isaret" aria-hidden="true">▾</span></button>
+        <button type="button" class="adim-bas" aria-expanded="false" aria-controls="adim2g"><span class="no">2</span><span class="adim-baslik"><b>Yeni hesapta Uzaktan Oynama'yı etkinleştir</b><span class="adim-ozet"></span></span><span class="ok-isaret" aria-hidden="true">▾</span></button>
         <div class="adim-govde" id="adim2g">
-          <div class="dikkat-kutu" role="note">
-            <b class="baslik">⚠ Ana hesabını burada kullanma</b>
-            Bu adım için <b>yeni, ayrı ve ücretsiz</b> bir PSN hesabı aç. Oyunlarını oynadığın hesabın e-postasını ve şifresini bu adımda <b>hiçbir yere yazma</b>.
-            <ul>
-              <li><b>Neden?</b> Bu bağlantı Sony'nin resmî uygulaması değil; Sony bunu kurallarına aykırı sayabilir. Bir sorun çıkarsa ana hesabın değil, bu yeni hesap etkilenir.</li>
-              <li>Sen PS5'te yine <b>ana hesabınla</b> oynarsın; yeni hesap yalnız görüntüyü TV'deki uygulamaya aktarır. Denemede ana hesapla oyun oynanırken TV yeni hesabı kullandı, oyun kesilmedi.</li>
-              <li>Yeni hesap oyun oynamaz, satın alma yapmaz: ona ödeme kartı ekleme.</li>
-            </ul>
-          </div>
-          <div id="hesapAdimlari">
-            <div class="yerler"><span class="yer konsol">🎮 Konsolda</span><span class="yer telefon">📱 Telefonda</span></div>
-            <h3 class="alt-baslik">A. Yeni hesabı aç ve PS5'e ekle</h3>
-            <ol class="yap">
-              <li>PS5 kumandasında <b>PS tuşuna</b> bas. Açılan menüde profil resmine gir, kullanıcı değiştirmeyi seç.</li>
-              <li>Kullanıcı seçme ekranında <b>"+"</b> kutusunu (kullanıcı ekle) seç.</li>
-              <li>Yeni hesap oluşturmayı seç. Sony'de <b>hiç kullanmadığın bir e-posta adresi</b> yaz; yoksa önce telefondan yeni bir e-posta adresi aç.</li>
-              <li>Adımları bitir, yeni hesapla PS5'e bir kez gir. Sonra ana kullanıcına dönebilirsin.</li>
-            </ol>
-            <figure class="cizim">
-              <svg viewBox="0 0 300 150" role="img" aria-label="Temsili çizim: kullanıcı seçme ekranında ana hesap ve yeni kullanıcı ekleme kutusu">
-                <rect x="2" y="2" width="296" height="146" rx="10" fill="#0f151c" stroke="#3a4b5c" stroke-width="3"/>
-                <circle cx="90" cy="64" r="28" fill="#3b6f96"/>
-                <circle cx="90" cy="56" r="9" fill="#cfe9ff"/>
-                <path d="M73 80a17 13 0 0 1 34 0z" fill="#cfe9ff"/>
-                <text x="90" y="118" text-anchor="middle" fill="#eef2f6" font-size="15">Ana hesabın</text>
-                <circle cx="210" cy="64" r="28" fill="none" stroke="#ffd84d" stroke-width="3" stroke-dasharray="7 5"/>
-                <text x="210" y="75" text-anchor="middle" fill="#ffd84d" font-size="32" font-weight="700">+</text>
-                <text x="210" y="118" text-anchor="middle" fill="#ffd84d" font-size="15" font-weight="700">yeni kullanıcı</text>
-              </svg>
-              <figcaption>Temsili çizim, gerçek ekran değil: PS5'in kullanıcı seçme ekranı. Sarı "+" kutusu yeni kullanıcı ekler.</figcaption>
-            </figure>
-            <div class="not">Başka yol: hesabı telefondan Sony'nin sitesinde aç, sonra PS5'te "+" kutusundan o hesapla gir.</div>
-            <div class="anla"><b>Bittiğini nasıl anlarsın:</b> PS5'in kullanıcı seçme ekranında ana hesabının yanında yeni hesabın da görünür.</div>
+          <div class="yerler"><span class="yer konsol">🎮 Konsolda</span></div>
+          <div class="bilgi"><b>Bu ayar her kullanıcıda ayrıdır.</b> Ana hesabında açık olsa bile yeni hesapta ayrıca açman gerekir. Başlamadan önce PS5'te yeni hesabın açık olsun.</div>
+          <ol class="yap">
+            <li>PS5'te yeni hesaptayken ana ekranın sağ üst köşesindeki <b>Ayarlar</b> simgesine (dişli çark) gir.</li>
+            <li><b>Sistem</b>'i seç.</li>
+            <li><b>Uzaktan Oynama</b>'yı seç.</li>
+            <li><b>Uzaktan Oynama'yı Etkinleştir</b> düğmesini aç.</li>
+            <li>Telefona dön, aşağıdaki <b>Açtım</b> düğmesine bas.</li>
+          </ol>
+          <span class="yol">PS5: Ayarlar → Sistem → Uzaktan Oynama → Uzaktan Oynama'yı Etkinleştir</span>
+          <div class="not">İngilizce menüde: Settings → System → Remote Play → Enable Remote Play.</div>
+          <figure class="cizim">
+            <svg viewBox="0 0 300 172" role="img" aria-label="Temsili çizim: Uzaktan Oynama ayarında açık duran Uzaktan Oynama'yı Etkinleştir düğmesi">
+              <rect x="2" y="2" width="296" height="168" rx="10" fill="#0f151c" stroke="#3a4b5c" stroke-width="3"/>
+              <text x="16" y="30" fill="#93a4b5" font-size="14">Ayarlar › Sistem › Uzaktan Oynama</text>
+              <rect x="14" y="44" width="272" height="56" rx="8" fill="#1c2935" stroke="#ffd84d" stroke-width="3"/>
+              <text x="26" y="68" fill="#eef2f6" font-size="15">Uzaktan Oynama'yı</text>
+              <text x="26" y="88" fill="#eef2f6" font-size="15">Etkinleştir</text>
+              <rect x="220" y="59" width="52" height="26" rx="13" fill="#5ee08a"/>
+              <circle cx="259" cy="72" r="10" fill="#fff"/>
+              <rect x="14" y="110" width="272" height="40" rx="8" fill="#16212b"/>
+              <text x="26" y="135" fill="#6f8091" font-size="14">Cihazı Eşleştir (5. adımda)</text>
+              <text x="246" y="164" text-anchor="middle" fill="#ffd84d" font-size="13" font-weight="700">↑ açık</text>
+            </svg>
+            <figcaption>Temsili çizim, gerçek ekran değil. Sarı çerçeveli satırdaki düğme açık olmalı.</figcaption>
+          </figure>
+          <div class="anla"><b>Bittiğini nasıl anlarsın:</b> PS5'te düğme açık görünür. "Açtım"a basınca bu adımın numarası yeşil ✓ olur ve 3. adım açılır.</div>
+          <details class="ic"><summary>PS5'i TV'den uyandırmak istersen (isteğe bağlı)</summary>
+            <span class="yol">PS5: Ayarlar → Sistem → Güç Tasarrufu → Dinlenme Modunda Kullanılabilen Özellikler → "İnternete Bağlı Kal" ve "Ağ Üzerinden PS5'i Açmayı Etkinleştir"</span>
+          </details>
+          <div class="not">Menü adları PS5'in sistem sürümüne göre biraz farklı olabilir. PS5 ve TV aynı modeme bağlı olmalı.</div>
+          <div class="satir" data-sonuc><button id="uzaktanBtn" class="ana">Açtım</button><button id="uzaktanGeri" hidden>Henüz açmadım, geri al</button></div>
+        </div>
+      </li>
 
-            <h3 class="alt-baslik">B. Yeni hesabı bu TV'ye bağla</h3>
-            <label class="onay" id="onayEtiket"><input type="checkbox" id="ayriHesap"><span>Yeni, ayrı bir hesap açtım; ana hesabımı girmeyeceğim</span></label>
-            <ol class="yap">
-              <li><b>Sony'de giriş yap</b> düğmesine bas; Sony'nin kendi giriş sayfası yeni sekmede açılır.</li>
-              <li><b>Yeni hesabın</b> e-postası ve şifresiyle gir. Şifreni yalnız orada yaz; bu sayfa ve TV şifreni hiç görmez.</li>
-              <li>Girişten sonra boş ya da hata yazan bir sayfa açılır; <b>bu normal</b>.</li>
-              <li>O sayfanın <b>adres çubuğundaki adresin tamamını</b> kopyala (içinde "code=" geçer): adres çubuğuna dokun, adresin tamamını seç, Kopyala'ya bas.</li>
-              <li>Bu sekmeye dön, adresi aşağıdaki kutuya yapıştır ve <b>Hesabı bağla</b>'ya bas. Kod birkaç dakika geçerli; beklemeden yap.</li>
-            </ol>
-            <figure class="cizim">
-              <svg viewBox="0 0 300 170" role="img" aria-label="Temsili çizim: girişten sonra açılan boş sayfa ve kopyalanacak adres çubuğu">
-                <rect x="2" y="2" width="296" height="166" rx="12" fill="#f4f6f8" stroke="#3a4b5c" stroke-width="3"/>
-                <path d="M3 14a11 11 0 0 1 11-11h272a11 11 0 0 1 11 11v40H3z" fill="#dfe5eb"/>
-                <rect x="12" y="12" width="276" height="34" rx="17" fill="#fff" stroke="#e0a800" stroke-width="3"/>
-                <text x="26" y="34" fill="#1a2430" font-size="14">…playstation.net/…?code=Ab12…</text>
-                <path d="M200 52l8-8 8 8z" fill="#1a2430"/>
-                <rect x="160" y="52" width="96" height="34" rx="8" fill="#1a2430"/>
-                <text x="208" y="74" text-anchor="middle" fill="#fff" font-size="15" font-weight="700">Kopyala</text>
-                <text x="150" y="122" text-anchor="middle" fill="#55616d" font-size="15">Boş sayfa ya da hata yazısı</text>
-                <text x="150" y="144" text-anchor="middle" fill="#55616d" font-size="15">(bu normal)</text>
-              </svg>
-              <figcaption>Temsili çizim, gerçek ekran değil. Kopyalanacak olan, en üstteki adres çubuğundaki adresin tamamı.</figcaption>
-            </figure>
-            <div id="hesapDugmeler" class="kilitli">
-              <p id="kilitNot" class="not">Düğmeler, yukarıdaki sarı kutuyu işaretleyince açılır.</p>
+      <li class="adim" id="adim3">
+        <button type="button" class="adim-bas" aria-expanded="false" aria-controls="adim3g"><span class="no">3</span><span class="adim-baslik"><b>Yeni hesabı uygulamaya tanıt (Sony girişi)</b><span class="adim-ozet"></span></span><span class="ok-isaret" aria-hidden="true">▾</span></button>
+        <div class="adim-govde" id="adim3g">
+          <div class="kilit-not" id="kilit3" hidden></div>
+          <div class="adim-is" id="is3">
+            <div id="hesapAdimlari">
+              <div class="yerler"><span class="yer telefon">📱 Telefonda</span></div>
+              <p class="not">TV, PS5'e bağlanırken yeni hesabın numarasını kullanır. Numarayı Sony'nin kendi giriş sayfası verir; şifren bu sayfaya da TV'ye de hiç gelmez.</p>
+              <ol class="yap">
+                <li>Aşağıdaki <b>Sony'de giriş yap</b> düğmesine bas; Sony'nin kendi giriş sayfası yeni sekmede açılır.</li>
+                <li><b>Yeni hesabın</b> e-postası ve şifresiyle gir, ana hesabınla değil. Sony bir doğrulama kodu sorarsa yeni hesabın e-postasına gelen kodu yaz.</li>
+                <li>Girişten sonra boş ya da hata yazan bir sayfa açılır; <b>bu normal</b>, o sayfayı kapatma.</li>
+                <li>O sayfanın <b>adres çubuğuna</b> dokun, adresin <b>tamamını</b> seç, <b>Kopyala</b>'ya bas. Adreste "code=" geçer.</li>
+                <li>Bu sekmeye (Tv Türkçe Altyazı paneli) dön.</li>
+                <li>Adresi aşağıdaki kutuya yapıştır (kutuya basılı tut → Yapıştır), sonra <b>Hesabı bağla</b>'ya bas. Kod birkaç dakika geçerli; beklemeden yap.</li>
+                <li>Yeşil "uygulamaya tanıtıldı" yazısı çıkınca bu adım biter.</li>
+              </ol>
+              <figure class="cizim">
+                <svg viewBox="0 0 300 170" role="img" aria-label="Temsili çizim: girişten sonra açılan boş sayfa ve kopyalanacak adres çubuğu">
+                  <rect x="2" y="2" width="296" height="166" rx="12" fill="#f4f6f8" stroke="#3a4b5c" stroke-width="3"/>
+                  <path d="M3 14a11 11 0 0 1 11-11h272a11 11 0 0 1 11 11v40H3z" fill="#dfe5eb"/>
+                  <rect x="12" y="12" width="276" height="34" rx="17" fill="#fff" stroke="#e0a800" stroke-width="3"/>
+                  <text x="26" y="34" fill="#1a2430" font-size="14">…playstation.net/…?code=Ab12…</text>
+                  <path d="M200 52l8-8 8 8z" fill="#1a2430"/>
+                  <rect x="160" y="52" width="96" height="34" rx="8" fill="#1a2430"/>
+                  <text x="208" y="74" text-anchor="middle" fill="#fff" font-size="15" font-weight="700">Kopyala</text>
+                  <text x="150" y="122" text-anchor="middle" fill="#55616d" font-size="15">Boş sayfa ya da hata yazısı</text>
+                  <text x="150" y="144" text-anchor="middle" fill="#55616d" font-size="15">(bu normal)</text>
+                </svg>
+                <figcaption>Temsili çizim, gerçek ekran değil. Kopyalanacak olan, en üstteki adres çubuğundaki adresin tamamı.</figcaption>
+              </figure>
+              <p class="buyuk uyari">⚠ YENİ hesabınla gir: ana hesabınla değil.</p>
               <div class="satir"><a id="psnGiris" class="dugme ana" target="_blank" rel="noopener noreferrer" href="#">Sony'de giriş yap ↗</a></div>
               <div class="satir" data-sonuc><input id="psnAdres" type="text" maxlength="2000" placeholder="https://remoteplay.dl.playstation.net/...?code=..." autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Girişten sonra açılan sayfanın adresi"><button id="psnBagla" class="ana">Hesabı bağla</button></div>
               <details class="ic"><summary>Hesap kimliğimi biliyorum</summary>
                 <div class="satir" data-sonuc><input id="psnKimlik" type="text" maxlength="20" placeholder="ör. AbCdEfGhIjk=" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Hesap kimliği"><button id="kimlikKaydet">Kaydet</button></div>
               </details>
+              <div class="anla"><b>Bittiğini nasıl anlarsın:</b> "Hesabı bağla"dan sonra yeşil yazı çıkar ve bu adımın numarası ✓ olur. Bu tiki TV koyar: hesabı Sony'den gerçekten aldığında.</div>
             </div>
-            <div class="anla"><b>Bittiğini nasıl anlarsın:</b> "Hesabı bağla"dan sonra yeşil "bağlandı" yazar ve bu adımın numarası ✓ olur.</div>
-          </div>
-          <div id="hesapTamam" hidden>
-            <div class="sonuc iyi">✓ Yeni hesap bu TV'ye bağlandı.</div>
-            <div class="satir" data-sonuc><button id="hesapDegistir">Hesabı değiştir</button></div>
-            <p class="not">Yanlış hesabı (ör. ana hesabını) bağladıysan "Hesabı değiştir"e bas: bağlı hesap TV'den silinir, yeni hesabı yeniden bağlarsın.</p>
+            <div id="hesapTamam" hidden>
+              <div class="sonuc iyi">✓ Yeni hesap uygulamaya tanıtıldı.</div>
+              <div class="satir" data-sonuc><button id="hesapDegistir">Hesabı değiştir</button></div>
+              <p class="not">Yanlış hesapla (ör. ana hesabınla) girdiysen "Hesabı değiştir"e bas: hesap TV'den silinir, yeni hesapla yeniden girersin.</p>
+            </div>
           </div>
         </div>
       </li>
 
-      <li class="adim" id="adim3">
-        <button type="button" class="adim-bas" aria-expanded="false" aria-controls="adim3g"><span class="no">3</span><span class="adim-baslik"><b>PS5'i bul</b><span class="adim-ozet"></span></span><span class="ok-isaret" aria-hidden="true">▾</span></button>
-        <div class="adim-govde" id="adim3g">
+      <li class="adim" id="adim4">
+        <button type="button" class="adim-bas" aria-expanded="false" aria-controls="adim4g"><span class="no">4</span><span class="adim-baslik"><b>PS5'i bul</b><span class="adim-ozet"></span></span><span class="ok-isaret" aria-hidden="true">▾</span></button>
+        <div class="adim-govde" id="adim4g">
           <div class="yerler"><span class="yer telefon">📱 Telefonda</span></div>
           <ol class="yap">
             <li>PS5 açık olsun ve TV ile <b>aynı modeme</b> bağlı olsun.</li>
@@ -323,23 +390,24 @@
           <details class="ic" id="elle"><summary>PS5 bulunamazsa: adresini elle yaz</summary>
             <div class="yerler"><span class="yer konsol">🎮 Konsolda</span><span class="yer telefon">📱 Telefonda</span></div>
             <ol class="yap">
-              <li>PS5'te <b>Ayarlar → Ağ → Bağlantı Durumu</b>'na gir.</li>
-              <li><b>IP adresi</b> satırını bul (ör. 192.168.1.20).</li>
+              <li>PS5'te <b>Ayarlar → Ağ</b> bölümüne gir, oradaki <b>bağlantı durumu</b> ekranını aç.</li>
+              <li>O ekranda <b>IP Adresi</b> satırını bul (ör. 192.168.1.20).</li>
               <li>Adresin <b>son sayısını</b> aşağıdaki kutuya yaz, <b>Bu adresi kullan</b>'a bas.</li>
             </ol>
+            <span class="yol">PS5: Ayarlar → Ağ bölümündeki bağlantı durumu ekranında "IP Adresi" satırı</span>
             <figure class="cizim">
-              <svg viewBox="0 0 300 166" role="img" aria-label="Temsili çizim: Bağlantı Durumu ekranında IP adresi satırı, son sayı işaretli">
+              <svg viewBox="0 0 300 166" role="img" aria-label="Temsili çizim: Ağ ayarlarındaki bağlantı durumu ekranında IP Adresi satırı, son sayı işaretli">
                 <rect x="2" y="2" width="296" height="162" rx="10" fill="#0f151c" stroke="#3a4b5c" stroke-width="3"/>
-                <text x="16" y="30" fill="#93a4b5" font-size="14">Ayarlar › Ağ › Bağlantı Durumu</text>
+                <text x="16" y="30" fill="#93a4b5" font-size="14">Ayarlar › Ağ › bağlantı durumu</text>
                 <rect x="14" y="44" width="272" height="34" rx="8" fill="#16212b"/>
                 <rect x="26" y="56" width="92" height="10" rx="5" fill="#2c3b49"/>
                 <rect x="190" y="56" width="84" height="10" rx="5" fill="#2c3b49"/>
                 <rect x="14" y="88" width="272" height="42" rx="8" fill="#1c2935" stroke="#ffd84d" stroke-width="3"/>
-                <text x="26" y="114" fill="#eef2f6" font-size="15">IP adresi</text>
+                <text x="26" y="114" fill="#eef2f6" font-size="15">IP Adresi</text>
                 <text x="274" y="114" text-anchor="end" fill="#eef2f6" font-size="17" font-weight="700">192.168.1.<tspan fill="#ffd84d">20</tspan></text>
                 <text x="276" y="154" text-anchor="end" fill="#ffd84d" font-size="14" font-weight="700">↑ son sayı</text>
               </svg>
-              <figcaption>Temsili çizim, gerçek ekran değil. Satırın adı biraz farklı olabilir (ör. "IPv4 adresi"). Sarı olan, yazacağın son sayı.</figcaption>
+              <figcaption>Temsili çizim, gerçek ekran değil. Satırın adı biraz farklı olabilir (ör. "IPv4 Adresi"). Sarı olan, yazacağın son sayı.</figcaption>
             </figure>
             <div class="satir adres" id="onekSatir" data-sonuc><span class="onek" id="onek"></span><input id="sonSayi" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="20" autocomplete="off" aria-label="PS5 adresinin son sayısı"><button id="sonSayiKaydet" class="ana">Bu adresi kullan</button></div>
             <p class="not" id="onekNot">Baştaki sayılar TV'nin ev ağından alındı; aynı modemdeki PS5'te de aynıdır. Yalnız son sayıyı yaz.</p>
@@ -351,23 +419,26 @@
         </div>
       </li>
 
-      <li class="adim" id="adim4">
-        <button type="button" class="adim-bas" aria-expanded="false" aria-controls="adim4g"><span class="no">4</span><span class="adim-baslik"><b>PS5'ten kodu al, buraya yaz</b><span class="adim-ozet"></span></span><span class="ok-isaret" aria-hidden="true">▾</span></button>
-        <div class="adim-govde" id="adim4g">
+      <li class="adim" id="adim5">
+        <button type="button" class="adim-bas" aria-expanded="false" aria-controls="adim5g"><span class="no">5</span><span class="adim-baslik"><b>PS5'i eşleştir: kodu al, buraya yaz</b><span class="adim-ozet"></span></span><span class="ok-isaret" aria-hidden="true">▾</span></button>
+        <div class="adim-govde" id="adim5g">
+          <div class="kilit-not" id="kilit5" hidden></div>
+          <div class="adim-is" id="is5">
           <div class="yerler"><span class="yer konsol">🎮 Konsolda</span><span class="yer telefon">📱 Telefonda</span></div>
           <div class="bilgi"><b>Bu adımı PS5'te yeni hesabınla yap.</b> Kod, PS5'te o an açık olan kullanıcıya aittir; ana hesabınla alınan kod işe yaramaz.</div>
           <ol class="yap">
-            <li>PS5'te <b>yeni kullanıcıya geç</b> (PS tuşu → profil resmi → kullanıcı değiştir).</li>
-            <li><b>Ayarlar → Sistem → Uzaktan Oynatma → Cihaz Bağla</b>'yı seç.</li>
-            <li>Ekranda <b>8 rakamlı bir kod</b> çıkar. O ekranı kapatma; kod birkaç dakika geçerli.</li>
-            <li>Kodu aşağıdaki kutuya yaz, <b>Eşleştir</b>'e bas.</li>
-            <li>"PS5 eşleşti" yazınca PS5'te ana kullanıcına dönebilirsin.</li>
+            <li>PS5'te <b>yeni hesapta</b> olduğuna bak (değilse: PS tuşu → profil resmi → Kullanıcı Değiştir → yeni hesap).</li>
+            <li><b>Ayarlar → Sistem → Uzaktan Oynama → Cihazı Eşleştir</b>'i seç.</li>
+            <li>Ekranda <b>8 rakamlı bir kod</b> çıkar. O ekranı kapatma; kod <b>birkaç dakika</b> geçerli, süre dolarsa ekranı kapatıp yeniden aç.</li>
+            <li>Kodun 8 rakamını aşağıdaki kutuya yaz, <b>Eşleştir</b>'e bas.</li>
+            <li>"PS5 eşleşti" yazınca bu adım biter.</li>
           </ol>
-          <span class="yol">PS5: Ayarlar → Sistem → Uzaktan Oynatma → Cihaz Bağla</span>
+          <span class="yol">PS5: Ayarlar → Sistem → Uzaktan Oynama → Cihazı Eşleştir</span>
+          <div class="not">İngilizce menüde: Settings → System → Remote Play → Pair Device.</div>
           <figure class="cizim">
-            <svg viewBox="0 0 300 160" role="img" aria-label="Temsili çizim: Cihaz Bağla ekranında 8 rakamlı kod, açık kullanıcı yeni hesap">
+            <svg viewBox="0 0 300 160" role="img" aria-label="Temsili çizim: Cihazı Eşleştir ekranında 8 rakamlı kod, açık kullanıcı yeni hesap">
               <rect x="2" y="2" width="296" height="156" rx="10" fill="#0f151c" stroke="#3a4b5c" stroke-width="3"/>
-              <text x="16" y="30" fill="#93a4b5" font-size="14">… › Uzaktan Oynatma › Cihaz Bağla</text>
+              <text x="16" y="30" fill="#93a4b5" font-size="14">… › Uzaktan Oynama › Cihazı Eşleştir</text>
               <rect x="34" y="44" width="232" height="58" rx="10" fill="#1c2935" stroke="#ffd84d" stroke-width="3"/>
               <text x="150" y="84" text-anchor="middle" fill="#ffd84d" font-size="30" font-weight="800" letter-spacing="3">1234 5678</text>
               <circle cx="32" cy="130" r="13" fill="#5ee08a"/>
@@ -380,16 +451,18 @@
           <div class="not" id="eslesAdres"></div>
           <div class="satir" data-sonuc><input id="ps5Pin" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="12" placeholder="8 rakamlı kod" autocomplete="off" aria-label="PS5'teki 8 rakamlı kod"><button id="eslestir" class="ana">Eşleştir</button></div>
           <div class="not" id="pinSay">Yazılan rakam: 0 / 8</div>
-          <div class="anla"><b>Bittiğini nasıl anlarsın:</b> yeşil "PS5 eşleşti" yazar, dört adımın hepsi ✓ olur ve aşağıda "Hazır" bölümü açılır.</div>
+          <div class="anla"><b>Bittiğini nasıl anlarsın:</b> yeşil "PS5 eşleşti" yazar, beş adımın hepsi ✓ olur ve aşağıda "Hazır" bölümü açılır.</div>
+          </div>
         </div>
       </li>
     </ol>
 
     <div id="hazir" class="hazir" hidden>
       <h3>✓ Hazır: çeviriyi başlat</h3>
+      <p class="bilgi">Artık PS5'te kendi hesabına dönebilirsin; yeni hesap arka planda yalnız görüntüyü TV'ye aktarır.</p>
       <div class="satir" data-sonuc><button id="hazirBaslat" class="ana kocaman">Çeviriyi başlat</button></div>
       <ol class="yap">
-        <li><span class="yer konsol">🎮 Konsolda</span> PS5'te ana kullanıcına dön (yeni hesaptaysan).</li>
+        <li><span class="yer konsol">🎮 Konsolda</span> PS tuşu → profil resmi → <b>Kullanıcı Değiştir</b> → kendi (ana) hesabın.</li>
         <li><span class="yer tv">📺 TV'de</span> TV kumandasındaki <b>giriş / kaynak</b> tuşuna bas, PS5'in takılı olduğu HDMI girişini seç.</li>
         <li><span class="yer konsol">🎮 Konsolda</span> Oyunun ayarlarında <b>altyazıyı aç</b>, altyazı dilini <b>İngilizce</b> yap.</li>
         <li>Oynamaya başla. İngilizce altyazının altında Türkçesi çıkar.</li>
@@ -406,7 +479,7 @@
         </svg>
         <figcaption>Temsili çizim, gerçek ekran değil: üstte oyunun İngilizce altyazısı, altında Türkçesi. Türkçe yazının rengi ve yeri aşağıdaki "Görünüm" ve "Çeviri alanları" ayarlarından değişir.</figcaption>
       </figure>
-      <div class="anla"><b>Çalıştığını nasıl anlarsın:</b> İngilizce altyazının altında Türkçe satır görünür ve bu sayfanın en üstündeki Çeviri kartında "● Çeviri açık" yazar.</div>
+      <div class="anla"><b>Çalıştığını nasıl anlarsın:</b> İngilizce altyazının altında Türkçe satır görünür ve bu sayfanın en üstündeki Çeviri anahtarı yeşil "Çeviri açık" olur.</div>
       <p class="not">PS5 dinlenme modundaysa yukarıdaki "PS5'i uyandır" düğmesiyle ya da kumandadaki PS tuşuyla aç.</p>
     </div>
   </section>
@@ -449,7 +522,20 @@
   <section class="kart">
     <h2><span class="ikon">📦</span>Oyun paketi</h2>
     <p class="not">Bir Türkçe yamanın çevirisini TV'ye yükle: ekranda okunan satır pakette varsa çevirmenin cümlesi gösterilir, yoksa makine çevirisi.</p>
+    <div id="etkinPaket" class="etkin-paket" role="status">…</div>
     <div id="paketSonuc" class="sonuc" role="status" hidden></div>
+    <div id="oturum">
+      <b>Bu çeviride satırlar nereden geldi</b>
+      <div class="sayaclar">
+        <div class="sayac paket"><b id="sayPaket">0</b><span>paket</span></div>
+        <div class="sayac"><b id="saySozluk">0</b><span>sözlük</span></div>
+        <div class="sayac"><b id="sayBellek">0</b><span>bellek</span></div>
+        <div class="sayac"><b id="sayMakine">0</b><span>makine</span></div>
+      </div>
+      <p class="not"><span class="rozet paket">paket</span> oyun paketindeki insan çevirisi · <span class="rozet sozluk">sözlük</span> uygulamanın yerleşik insan çevirisi · <span class="rozet bellek">bellek</span> az önce çevrilmiş satırın tekrarı · <span class="rozet makine">makine</span> makine çevirisi. Sayılar her açılışta sıfırlanır; yalnız bu sayfada görünür, hiçbir yere kaydedilmez.</p>
+      <ul class="son-satirlar" id="sonSatirlar"></ul>
+    </div>
+    <div class="satir"><label class="secenek"><input id="paketIsaret" type="checkbox" checked>Paketten gelen satırların başına TV'de ✓ koy</label></div>
     <div id="paketler"></div>
     <div class="satir">
       <input id="oyunAra" type="text" maxlength="80" placeholder="Oyun adı, ör. Red Dead Redemption 2" enterkeyhint="search" aria-label="Oyun adı">
@@ -464,7 +550,8 @@
       <div class="satir"><input id="yukCevirmen" type="text" maxlength="80" placeholder="Çeviren grup veya kişi"></div>
       <div class="satir"><input id="yukKaynak" type="text" maxlength="300" placeholder="İndirdiğin sayfanın adresi"></div>
       <div class="satir"><input id="yukBagis" type="url" maxlength="300" placeholder="Bağış / destek sayfası (varsa)"></div>
-      <div class="satir"><button id="yukle" class="ana">TV'ye yükle</button></div>
+      <div class="satir" data-sonuc><button id="yukle" class="ana">TV'ye yükle</button></div>
+      <div id="yukIlerleme" hidden><div class="yukleme"><i></i></div><div class="not" id="yukYuzde"></div></div>
     </details>
   </section>
 
@@ -472,7 +559,7 @@
     <h2><span class="ikon">🔒</span>Güvenlik</h2>
     <ul class="guvenlik" id="guvenlik"></ul>
     <div class="satir"><button id="unut" class="tehlike">PSN hesabını ve PlayStation eşleşmesini TV'den sil</button></div>
-    <p class="not">Bir şeyden şüphelenirsen: bu düğmeye bas, PlayStation'da Uzaktan Oynatma → Bağlı Cihazlar'dan TV'yi kaldır ve yansıtma hesabının şifresini değiştir.</p>
+    <p class="not">Bir şeyden şüphelenirsen: bu düğmeye bas, PS5'te yeni hesabın Uzaktan Oynama ayarlarından eşleşmiş cihazlar arasındaki TV'yi kaldır ve yeni hesabın şifresini değiştir.</p>
   </section>
 
   <footer>Tv Türkçe Altyazı · by <b>Cihan Sezgin</b><br><a id="hakkinda" href="#" style="color:var(--sub)">Hakkında ve lisanslar</a></footer>
@@ -499,8 +586,9 @@ $("hakkinda").href = api("/hakkinda");
 function status(text, error) { const d = $("durum"); d.textContent = text; d.className = error ? "hata" : ""; }
 
 // Messages for the person holding the phone: what happened and what to do, never raw system text.
-const EXPIRED = "Bağlantı süresi doldu. TV'deki QR kodu yeniden okut.";
-const UNREACHABLE = "TV'ye ulaşılamadı. Telefon, TV ile aynı Wi-Fi'a bağlı mı? Mobil veriyi kapat, evdeki Wi-Fi'a bağlan, sayfayı yenile. TV'de Tv Türkçe Altyazı açık olmalı.";
+// The TV's panel lives as long as the app's service: after the app was closed, a new start or 4 idle hours, only a new QR opens it.
+const EXPIRED = "Bağlantı kapandı. TV'de Tv Türkçe Altyazı'yı aç, QR'ı yeniden okut.";
+const UNREACHABLE = "TV'ye ulaşılamadı. TV'de Tv Türkçe Altyazı'yı aç, QR'ı yeniden okut. Telefon TV ile aynı Wi-Fi'da olmalı (mobil veri kapalı).";
 const ODD = "TV beklenmeyen bir cevap verdi. Sayfayı yenileyip tekrar dene.";
 const NO_SETTINGS = "Ayarlar TV'den alınamadı. Sayfayı yenileyip tekrar dene.";
 function late(seconds) { return seconds + " saniyedir TV'den cevap gelmedi. TV açık mı, Tv Türkçe Altyazı uygulaması açık mı? Biraz bekleyip tekrar dene."; }
@@ -509,6 +597,9 @@ function expired() {
   stopped = true;
   status(EXPIRED, true);
   document.querySelectorAll("button, select, input").forEach((e) => (e.disabled = true));
+  $("anahtar").classList.remove("bekle");
+  $("anahtarYazi").textContent = "Bağlantı kapandı";
+  $("ceviriDurum").textContent = EXPIRED;
 }
 
 async function load() {
@@ -785,12 +876,70 @@ function refreshLocks() {
 }
 
 // ---- Game packs.
+let packsData = null, packsLoading = false, lastLines = "", markSaving = false;
+const SOURCE_NAMES = { paket: "paket", sozluk: "sözlük", bellek: "bellek", makine: "makine" };
+
 function packAction(btn, work, busyText, doneText) {
   return press(btn, async () => { const data = await work(); renderPacks(data); return data; }, busyText, doneText).then((data) => {
-    if (!data) return;
-    tell($("paketSonuc"), true, doneText);
-    $("paketSonuc").scrollIntoView({ behavior: "smooth", block: "center" });
+    if (!data) return null;
+    if (data.sonuc) packResult(data.sonuc);
+    else {
+      tell($("paketSonuc"), true, doneText);
+      $("paketSonuc").scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    return data;
   });
+}
+
+/** What the TV read from an uploaded or downloaded file, at the top of the pack card. */
+function packResult(r) {
+  const box = $("paketSonuc");
+  box.className = "sonuc iyi";
+  box.textContent = "";
+  box.append(el("div", {}, el("b", { textContent: "✓ Oyun paketi yüklendi ve kullanılıyor: " + r.oyun })),
+    el("div", { textContent: "Okunan satır: " + Number(r.satir).toLocaleString("tr-TR") }),
+    el("div", { textContent: "Kaynak dosya: " + r.dosya }),
+    r.cevirmen ? el("div", { textContent: "Çeviren: " + r.cevirmen }) : null,
+    el("div", { className: "not", textContent: "TV'nin üstünde de birkaç saniye \"Oyun paketi yüklendi\" yazısı çıktı. Çeviri açıksa yeni paket bir sonraki satırdan itibaren kullanılır." }));
+  box.hidden = false;
+  box.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+/** The pack in use, as the TV has it in memory, at the top of the pack card. */
+function renderActive(active, mark) {
+  const box = $("etkinPaket"), on = !!(active && active.id);
+  const key = on ? active.id + "|" + active.satir + "|" + active.oyun + "|" + active.cevirmen : "";
+  if (box.dataset.paket !== key || box.textContent === "…") {
+    box.dataset.paket = key;
+    box.className = "etkin-paket" + (on ? " var" : "");
+    box.textContent = "";
+    if (on) {
+      box.append(el("b", { textContent: "● Kullanılan paket: " }), active.oyun + " · " + Number(active.satir).toLocaleString("tr-TR") + " satır" +
+        (active.cevirmen ? " · çeviren: " + active.cevirmen : ""));
+    } else {
+      box.append("Paket kullanılmıyor: oyun metni makine çevirisiyle çevrilir.");
+    }
+  }
+  if (typeof mark === "boolean" && !markSaving) $("paketIsaret").checked = mark;
+}
+
+/** This run's counts by source and its last lines with a badge each; memory only on the TV, never saved. */
+function renderSession(o) {
+  if (!o) return;
+  const c = o.sayac || {};
+  $("sayPaket").textContent = c.paket || 0;
+  $("saySozluk").textContent = c.sozluk || 0;
+  $("sayBellek").textContent = c.bellek || 0;
+  $("sayMakine").textContent = c.makine || 0;
+  const lines = o.son || [], key = JSON.stringify(lines);
+  if (key === lastLines) return;
+  lastLines = key;
+  const list = $("sonSatirlar");
+  list.textContent = "";
+  if (!lines.length) list.append(el("li", { className: "not", textContent: "Çeviri açılınca TV'de çıkan son satırlar burada, nereden geldikleriyle görünür." }));
+  lines.forEach((line) => list.append(el("li", {},
+    el("span", { className: "rozet " + (SOURCE_NAMES[line.kaynak] ? line.kaynak : "makine"), textContent: SOURCE_NAMES[line.kaynak] || line.kaynak }),
+    el("span", { textContent: line.tr }))));
 }
 
 function credit(p) {
@@ -805,13 +954,20 @@ function thanks(p) {
 }
 
 function renderPacks(data) {
+  packsData = data;
+  if (data.etkin) {
+    renderActive(data.etkin, data.isaret);
+    lastActiveId = data.etkin.id || "";
+  }
   const box = $("paketler");
   box.innerHTML = "";
-  if (!data.packs.length) { box.append(el("p", { className: "not", textContent: "TV'de henüz oyun paketi yok." })); return; }
-  data.packs.forEach((p) => {
+  if (!data.packs.length) { box.append(el("p", { className: "not", textContent: "TV'de henüz oyun paketi yok. Aşağıdan oyunun adıyla ara ya da telefondaki dosyayı yükle." })); return; }
+  // The pack in use first, framed green; the rest below it.
+  data.packs.slice().sort((a, b) => (b.id === data.active) - (a.id === data.active)).forEach((p) => {
     const on = p.id === data.active;
     const card = el("div", { className: "kart" + (on ? " aktif" : "") },
-      el("b", { textContent: p.game + (on ? " — kullanılıyor" : "") }),
+      on ? el("div", { className: "etiket-kullanilan", textContent: "● KULLANILIYOR" }) : null,
+      el("b", { textContent: p.game }),
       el("div", { className: "tesekkur", textContent: thanks(p) }),
       el("div", { className: "not", textContent: credit(p) }),
       el("div", { className: "satir" },
@@ -865,13 +1021,26 @@ function resultCard(r, game) {
     if (!data.files.length) throw new Error("TV'nin okuyabileceği çeviri dosyası yok (.po, .tsv, .csv, .txt, .rpy, .zip). Bu yama oyunun kendi biçiminde olabilir.");
     data.files.forEach((f) => {
       const get = el("button", { textContent: "TV'ye indir" });
-      get.addEventListener("click", () => packAction(get,
-        () => postJson("/api/paket/indir", { repo: r.repo, path: f.path, game: game }, 180),
-        "İndiriliyor…", "Paket yüklendi ve seçildi."));
-      files.append(el("div", { className: "dosya" },
+      const row = el("div", { className: "dosya" },
         el("span", { textContent: (f.path.startsWith("release/") ? "Yayın " + f.path.split("/")[1] + ": " + f.path.split("/").slice(2).join("/") : f.path) +
           (f.size > 0 ? " (" + Math.ceil(f.size / 1024) + " KB)" : "") }),
-        get));
+        get);
+      get.addEventListener("click", () => {
+        // The TV downloads and reads the file itself; the button counts the seconds so a long wait never looks stuck.
+        const started = Date.now();
+        const tick = setInterval(() => {
+          if (!idle(get)) get.textContent = "TV indiriyor ve okuyor… " + Math.round((Date.now() - started) / 1000) + " sn";
+        }, 1000);
+        packAction(get, () => postJson("/api/paket/indir", { repo: r.repo, path: f.path, game: game }, 180), "TV indiriyor ve okuyor…",
+          "Paket yüklendi ve seçildi.").then((data) => {
+          clearInterval(tick);
+          if (!data) return;
+          files.querySelectorAll(".dosya.etkin").forEach((d) => d.classList.remove("etkin"));
+          row.classList.add("etkin");
+          get.textContent = "✓ TV'de, kullanılıyor";
+        }, () => clearInterval(tick));
+      });
+      files.append(row);
     });
     return data.files.length;
   }, "Bakılıyor…", (n) => n + " dosya bulundu. Birinin yanındaki \"TV'ye indir\"e bas."));
@@ -881,13 +1050,67 @@ function resultCard(r, game) {
 
 $("ara").addEventListener("click", search);
 $("oyunAra").addEventListener("keydown", (e) => { if (e.key === "Enter") search(); });
+const MAX_UPLOAD = 30 * 1024 * 1024;
+function megabytes(n) { return (n / 1048576).toLocaleString("tr-TR", { maximumFractionDigits: 1, minimumFractionDigits: 1 }); }
+
+/**
+ * Sends the file with its progress shown: the share sent, then "TV okuyor" while the TV reads it. fetch cannot report
+ * an upload's progress, so this one request goes through XMLHttpRequest, with the same token and the same messages.
+ */
+function upload(path, file) {
+  const bar = $("yukIlerleme"), fill = bar.querySelector(".yukleme"), text = $("yukYuzde");
+  function show(part, words) {
+    bar.hidden = false;
+    fill.classList.toggle("belirsiz", part === null);
+    fill.firstElementChild.style.width = part === null ? "" : Math.round(part * 100) + "%";
+    text.textContent = words;
+  }
+  return new Promise((resolve, reject) => {
+    if (stopped) return reject(new Error(EXPIRED));
+    const x = new XMLHttpRequest();
+    x.open("POST", api(path));
+    x.timeout = 180000;
+    x.upload.onprogress = (e) => {
+      if (!e.lengthComputable) return show(null, "Gönderiliyor…");
+      show(e.loaded / e.total, "Gönderiliyor: %" + Math.round(e.loaded / e.total * 100) + " (" + megabytes(e.loaded) + " / " + megabytes(e.total) + " MB)");
+    };
+    x.upload.onload = () => show(null, "Dosya gitti; TV dosyayı okuyor…");
+    x.onload = () => {
+      if (x.status === 403) { expired(); return reject(new Error(EXPIRED)); }
+      let data = null;
+      try { data = JSON.parse(x.responseText); } catch (e) {}
+      if (x.status === 413) return reject(new Error((data && data.error) || "Dosya çok büyük: TV en fazla 30 MB alır."));
+      if (x.status !== 200 || !data || data.error) return reject(new Error((data && data.error) || ODD));
+      resolve(data);
+    };
+    x.onerror = () => reject(new Error(UNREACHABLE));
+    x.ontimeout = () => reject(new Error(late(180)));
+    show(0, "Gönderiliyor: %0");
+    x.send(file);
+  }).finally(() => { bar.hidden = true; });
+}
+
 $("yukle").addEventListener("click", () => {
   const btn = $("yukle"), file = $("yukDosya").files[0];
   if (!file) return tell(resultFor(btn), false, "Önce yukarıdaki kutudan telefondaki çeviri dosyasını seç.");
-  if (file.size > 30 * 1024 * 1024) return tell(resultFor(btn), false, "Dosya 30 MB'tan büyük; TV bunu alamaz.");
+  if (!file.size) return tell(resultFor(btn), false, "Seçtiğin dosya boş (0 bayt). Çeviri dosyasını yeniden indirip seç.");
+  if (file.size > MAX_UPLOAD) return tell(resultFor(btn), false, "Dosya çok büyük: " + megabytes(file.size) + " MB. TV en fazla 30 MB alır; .zip ise içinden yalnız çeviri dosyasını seç.");
   const q = "?dosya=" + encodeURIComponent(file.name) + "&oyun=" + encodeURIComponent($("yukOyun").value.trim()) +
     "&cevirmen=" + encodeURIComponent($("yukCevirmen").value.trim()) + "&kaynak=" + encodeURIComponent($("yukKaynak").value.trim()) + "&bagis=" + encodeURIComponent($("yukBagis").value.trim());
-  packAction(btn, () => call("/api/paket/yukle" + q, { method: "POST", body: file }, 180), "Gönderiliyor…", "Paket yüklendi ve seçildi.");
+  packAction(btn, () => upload("/api/paket/yukle" + q, file), "Gönderiliyor…", "Paket yüklendi ve seçildi.");
+});
+$("paketIsaret").addEventListener("change", () => {
+  const box = $("paketIsaret"), on = box.checked;
+  markSaving = true;
+  postJson("/api/paket/isaret", { acik: on }).then((data) => {
+    markSaving = false;
+    renderPacks(data);
+    tell(resultFor(box), true, on ? "TV'de paketten gelen satırların başında ✓ görünecek." : "✓ işareti kapatıldı; paket satırları işaretsiz görünecek.");
+  }, (e) => {
+    markSaving = false;
+    box.checked = !on;
+    tell(resultFor(box), false, (e && e.message) || ODD);
+  });
 });
 
 // ---- PS5 address typing. Mirrors SetupGuide on the TV, which checks again.
@@ -936,27 +1159,113 @@ function addressProblem(a) {
 }
 
 // ---- Translation switch and the PS5 setup. The page only ever learns whether a key exists, never the key.
-let state = null, busy = 0, shownStep = 0, found = [], foundKey = "", fullAddressOpened = false;
+// Debug builds only: "&deneme=1" after the QR address makes the switch run the TV's demo clip instead of the PS5.
+const DEMO = new URLSearchParams(location.search).get("deneme") === "1";
+const STEPS = 5;
+let state = null, busy = 0, shownStep = 0, found = [], foundKey = "", fullAddressOpened = false, lastActiveId;
 const forced = new Map();
-const DONE = ["Uzaktan Oynatma açık.", "Yeni hesap bağlandı.", "", "PS5 eşleşti."];
+const DONE = ["Yeni hesap açıldı, PS5'te o hesaptasın.", "Uzaktan Oynama açık.", "Yeni hesap uygulamaya tanıtıldı.", "", "PS5 eşleşti."];
+const COUNTED = ["0'ı", "1'i", "2'si", "3'ü", "4'ü", "5'i"];
+const NO_SETUP = { adimlar: [false, false, false, false, false], kilitler: ["", "", "", "", ""], tamam: 0, sira: 1,
+  yeniHesap: false, uzaktanOynama: false, secilenAdres: "", onek: "" };
 const NOT_FOUND = "PS5 bulunamadı. Şunlara bak: PS5 açık mı? PS5 ve TV aynı modeme bağlı mı (biri misafir ağında olmasın)? Olmazsa aşağıdan PS5'in adresini elle yaz.";
+
+/** A run that ended by itself, in a few words for the switch; the full reason goes under it. */
+function failureTitle(s) {
+  const why = s.neden || s.not || "";
+  if (why.indexOf("bağlantı kesildi") >= 0) return "PS5 bağlantısı kesildi";
+  if (why.indexOf("Deneme") === 0) return "Deneme kapandı";
+  if (why.indexOf("PlayStation'a bağlanamadı") === 0 || /PS5|PlayStation/.test(why)) return "PS5'e bağlanılamadı";
+  return "Çeviri açılamadı";
+}
+
+/** The one switch: off, starting, on, stopping, or failed with the reason; locked until the PS5 is paired. */
+function renderSwitch(s) {
+  const btn = $("anahtar"), p = s.ps5, phase = s.durum || (s.calisiyor ? "acik" : "kapali");
+  const waiting = phase === "baslatiliyor" || phase === "durduruluyor", failed = phase === "hata";
+  const needsPairing = !p.eslesti && !s.calisiyor && !DEMO;
+  const noLeave = s.izin === false && !s.calisiyor;
+  if (!btn.classList.contains("calisiyor")) {
+    btn.setAttribute("aria-checked", phase === "acik" || phase === "baslatiliyor" ? "true" : "false");
+    btn.classList.toggle("bekle", waiting);
+    btn.classList.toggle("hata", failed);
+    $("anahtarYazi").textContent =
+      phase === "baslatiliyor" ? "Başlatılıyor…" :
+      phase === "durduruluyor" ? "Kapatılıyor…" :
+      phase === "acik" ? (s.deneme ? "Deneme modu açık" : "Çeviri açık") :
+      failed ? failureTitle(s) :
+      noLeave ? "Önce TV'de izin ver" :
+      needsPairing ? "Çeviri kapalı · önce eşleştir" : "Çeviri kapalı";
+    btn.disabled = stopped || noLeave || needsPairing;
+  }
+  $("ceviriKart").classList.toggle("acik", phase === "acik");
+  $("ceviriKart").classList.toggle("hata", failed);
+  $("ceviriDurum").textContent = noLeave ? "TV ekranındaki «İzni ver» düğmesine bas; izin verilince anahtar açılır." :
+    phase === "acik" ? (s.duraklatildi ? "Duraklatıldı: TV'deki yazılar silindi. Devam etmek için \"Devam\"a bas." :
+      s.not && s.not !== "Çeviri açık" ? s.not : s.deneme ? "TV deneme videosunu çeviriyor." : "TV PS5 görüntüsünü okuyor, Türkçe altyazı TV'de görünür. Kapatmak için anahtara dokun.") :
+    phase === "baslatiliyor" ? (s.not && s.not !== "Başlatılıyor" ? s.not + "…" :
+      (s.deneme ? "TV deneme videosunu açıyor" : "TV PS5'e bağlanıyor") + "; birkaç saniye sürer. Vazgeçmek için anahtara dokun.") :
+    phase === "durduruluyor" ? "PS5 bağlantısı kapatılıyor; birkaç saniye sürer." :
+    failed ? "" : "Kapalıyken TV bekler; bu sayfadan istediğin an açabilirsin.";
+  const reason = $("ceviriNeden");
+  reason.hidden = !failed;
+  reason.textContent = failed ? (s.neden || s.not) + " Tekrar denemek için anahtara dokun." : "";
+  $("ceviriKilit").hidden = !needsPairing || noLeave;
+  $("denemeNot").hidden = !DEMO;
+  $("duraklatSatir").hidden = !(s.calisiyor && phase === "acik");
+  if (idle($("duraklat"))) $("duraklat").textContent = s.duraklatildi ? "Devam" : "Duraklat";
+}
+
+/** On or off from the switch. The run lives in the TV's service; the page only asks and shows what the TV says. */
+async function toggle() {
+  const btn = $("anahtar");
+  if (!state || btn.disabled || btn.classList.contains("calisiyor")) return;
+  const off = state.calisiyor && state.durum !== "durduruluyor";
+  const box = resultFor(btn);
+  busy++;
+  btn.classList.add("calisiyor");
+  btn.classList.add("bekle");
+  btn.classList.remove("hata");
+  btn.setAttribute("aria-busy", "true");
+  btn.setAttribute("aria-checked", off ? "false" : "true");
+  $("anahtarYazi").textContent = off ? "Kapatılıyor…" : "Açılıyor…";
+  box.hidden = true;
+  try {
+    const s = await postJson("/api/ceviri", off ? { islem: "durdur" } : DEMO ? { islem: "baslat", deneme: true } : { islem: "baslat" }, 20);
+    btn.classList.remove("calisiyor");
+    btn.removeAttribute("aria-busy");
+    renderState(Object.assign({ girisAdresi: state && state.girisAdresi }, s));
+  } catch (e) {
+    btn.classList.remove("calisiyor");
+    btn.removeAttribute("aria-busy");
+    if (state) renderState(state);
+    if (!stopped) tell(box, false, (e && e.message) || ODD);
+  } finally { busy--; }
+  later(1000);
+}
 
 function renderState(s) {
   state = s;
   const p = s.ps5;
-  $("ceviriDurum").textContent = (s.calisiyor ? "● " : "○ ") + (s.calisiyor && s.deneme ? "Deneme modu · " : "") + s.not;
-  if (s.izin === false) $("ceviriDurum").textContent = "○ Önce TV'de izin ver: TV ekranındaki «İzni ver» düğmesine bas.";
-  setIdle("baslat", s.calisiyor);
-  setIdle("durdur", !s.calisiyor);
-  setIdle("duraklat", !s.calisiyor);
-  if (idle($("duraklat"))) $("duraklat").textContent = s.duraklatildi ? "Devam" : "Duraklat";
+  renderSwitch(s);
   $("ps5Ozet").className = p.eslesti ? "ok" : "";
-  $("ps5OzetYazi").textContent = p.eslesti ? "✓ PS5 eşleşmiş (" + p.adres + ")." : "PS5 henüz bağlı değil. Aşağıdaki 4 adımı bir kez yap.";
+  $("ps5OzetYazi").textContent = p.eslesti ? "✓ PS5 eşleşmiş (" + p.adres + ")." : "PS5 henüz bağlı değil. Aşağıdaki 5 adımı bir kez yap.";
   $("uyandir").hidden = !p.eslesti;
   setIdle("uyandir", false);
   setIdle("unut", !p.hesap && !p.eslesti);
-  renderSteps(s, p, s.kurulum || { adimlar: [false, false, false, false], tamam: 0, sira: 1, uzaktanOynatma: false, secilenAdres: "", onek: "" });
+  renderSteps(s, p, s.kurulum || NO_SETUP);
   gate();
+  if (s.oturum) renderSession(s.oturum);
+  if (s.paket) {
+    const id = (s.paket.etkin && s.paket.etkin.id) || "";
+    renderActive(s.paket.etkin, s.paket.isaret);
+    // The pack changed elsewhere (on the TV, from another phone): the list follows.
+    if (lastActiveId !== undefined && id !== lastActiveId && packsData && !packsLoading) {
+      packsLoading = true;
+      call("/api/paket").then(renderPacks, () => {}).then(() => { packsLoading = false; });
+    }
+    lastActiveId = id;
+  }
   const ok = "✅ ", warn = "⚠️ ", home = isHome(location.hostname);
   const items = [
     [ok, "Yansıtma için ayrı bir PSN hesabı kullanılır; asıl hesabın bu uygulamaya hiç bağlanmaz."],
@@ -966,48 +1275,62 @@ function renderState(s) {
     [ok, "TV eşleşme bilgisini yalnız ev ağındaki PlayStation'a gönderir."],
     [home ? ok : warn, home ? "Bu sayfa ev ağı adresinden açıldı." : "Bu sayfa ev ağı dışından açılmış görünüyor; kapat."],
     p.adres ? (isHome(p.adres) ? [ok, "Eşleşmiş PlayStation ev ağında."] : [warn, "Eşleşmiş PlayStation adresi ev ağına ait değil; eşleşmeyi sil."]) : [ok, "Henüz eşleşmiş PlayStation yok."],
-    [ok, "Sayfa yalnız QR koddaki gizli anahtarla açılır; çeviri kapalıyken 15 dakika kullanılmazsa kendiliğinden kapanır."],
+    [ok, "Sayfa yalnız QR koddaki gizli anahtarla açılır. TV'de uygulama kapanınca ya da çeviri kapalıyken 4 saat kullanılmazsa sayfa da kapanır; yeniden açmak için QR'ı yeniden okut."],
+    [ok, "Çevrilen oyun satırları ve sayılar yalnız TV'nin belleğinde durur, yalnız bu sayfaya gelir; hiçbir dosyaya yazılmaz."],
     [warn, "Bağlantı şifresiz (http). Bu sayfayı yalnız kendi ev Wi-Fi'ında aç; QR kodun fotoğrafını kimseyle paylaşma."],
   ];
   $("guvenlik").innerHTML = "";
   items.forEach(([mark, text]) => $("guvenlik").append(el("li", { className: mark === warn ? "uyari" : "", textContent: mark + text })));
 }
 
-/** The four step cards: a done step shows ✓ and folds to one line, the next one opens with a yellow frame. */
+/** The five step cards: a done step shows ✓ and folds to one line, the next one opens with a yellow frame, a locked one says why. */
 function renderSteps(s, p, k) {
-  const current = k.sira;
+  const current = k.sira, locks = k.kilitler || NO_SETUP.kilitler;
   if (current !== shownStep) {
     const first = shownStep === 0;
     forced.clear();
     shownStep = current;
     // A step just finished: bring the next one into view. Not on the first load, so a reload stays at the top.
     if (!first) {
-      const target = current > 4 ? $("hazir") : $("adim" + current);
+      const target = current > STEPS ? $("hazir") : $("adim" + current);
       setTimeout(() => target.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
     }
   }
   const chosen = k.secilenAdres || "";
-  for (let i = 1; i <= 4; i++) {
-    const li = $("adim" + i), done = !!k.adimlar[i - 1];
+  for (let i = 1; i <= STEPS; i++) {
+    const li = $("adim" + i), done = !!k.adimlar[i - 1], lock = done ? "" : locks[i - 1] || "";
     const open = forced.has(i) ? forced.get(i) : i === current;
     li.classList.toggle("tamam", done);
     li.classList.toggle("sira", i === current);
+    li.classList.toggle("kilit", !!lock);
     li.classList.toggle("acik", open);
     li.querySelector(".adim-bas").setAttribute("aria-expanded", open ? "true" : "false");
-    li.querySelector(".no").textContent = done ? "✓" : String(i);
+    li.querySelector(".no").textContent = done ? "✓" : lock ? "🔒" : String(i);
     const where = chosen || p.adres;
-    li.querySelector(".adim-ozet").textContent = done ? (i === 3 ? "PS5 seçildi" + (where ? ": " + where : ".") : DONE[i - 1]) : i === current ? "Sıradaki adım" : "";
+    li.querySelector(".adim-ozet").textContent = done ? (i === 4 ? "PS5 seçildi" + (where ? ": " + where : ".") : DONE[i - 1]) :
+      lock ? "Kilitli: " + lock : i === current ? "Sıradaki adım" : "";
   }
-  $("ilerlemeYazi").textContent = k.tamam >= 4 ? "Kurulum tamam: 4 adımın hepsi bitti ✓" : "4 adımdan " + ["0'ı", "1'i", "2'si", "3'ü"][k.tamam] + " tamam";
+  for (const i of [3, 5]) {
+    const lock = k.adimlar[i - 1] ? "" : locks[i - 1] || "";
+    $("kilit" + i).hidden = !lock;
+    $("kilit" + i).textContent = lock ? "🔒 " + lock : "";
+    $("is" + i).classList.toggle("kilitli", !!lock);
+  }
+  $("ilerlemeYazi").textContent = k.tamam >= STEPS ? "Kurulum tamam: 5 adımın hepsi bitti ✓" : STEPS + " adımdan " + COUNTED[k.tamam] + " tamam";
   $("ilerleme").querySelectorAll(".cubuk i").forEach((b, i) => b.classList.toggle("dolu", !!k.adimlar[i]));
+  setIdle("bastan", false);
+  $("bastan").hidden = !k.tamam && !k.secilenAdres && !p.hesap && !p.eslesti;
 
-  // Step 1 is marked on the phone; pairing marks it too.
-  $("yaptim").hidden = !!k.adimlar[0];
-  $("yaptimGeri").hidden = !(k.uzaktanOynatma && !p.eslesti);
-  // Step 2: once linked, only "bağlandı" and the way to change the account.
-  $("hesapTamam").hidden = !k.adimlar[1];
-  $("hesapAdimlari").hidden = !!k.adimlar[1];
-  // Step 3: found PS5s to tap, the chosen address, and the TV's own network prefix for typing only the last number.
+  // Steps 1 and 2 happen on the PS5, so the page's buttons mark them; a linked account or a pairing marks them too.
+  $("yeniHesapBtn").hidden = !!k.adimlar[0];
+  $("yeniHesapGeri").hidden = !(k.yeniHesap && !p.hesap && !p.eslesti);
+  if (k.adimlar[0] && !$("ayriHesap").checked) $("ayriHesap").checked = true;
+  $("uzaktanBtn").hidden = !!k.adimlar[1];
+  $("uzaktanGeri").hidden = !(k.uzaktanOynama && !p.eslesti);
+  // Step 3: once introduced, only "tanıtıldı" and the way to change the account.
+  $("hesapTamam").hidden = !k.adimlar[2];
+  $("hesapAdimlari").hidden = !!k.adimlar[2];
+  // Step 4: found PS5s to tap, the chosen address, and the TV's own network prefix for typing only the last number.
   $("seciliAdres").hidden = !chosen;
   $("seciliAdres").textContent = "✓ Seçili PS5 adresi: " + chosen;
   $("onek").textContent = k.onek ? k.onek + "." : "";
@@ -1015,14 +1338,14 @@ function renderSteps(s, p, k) {
   $("onekNot").hidden = !k.onek;
   if (!k.onek && !fullAddressOpened) { fullAddressOpened = true; $("tamAdres").open = true; }
   renderFound(chosen);
-  // Step 4
+  // Step 5
   const ps5 = found.filter((f) => f.adres === chosen)[0];
-  $("eslesAdres").textContent = !chosen ? "Önce 3. adımda PS5'i seç." :
+  $("eslesAdres").textContent = !chosen ? "Önce 4. adımda PS5'i seç." :
     "Eşleştirilecek PS5: " + chosen + (ps5 && !ps5.uyanik ? " (dinlenme modunda: önce kumandadaki PS tuşuyla aç)" : "");
   // Hazır
   $("hazir").hidden = !p.eslesti;
-  const go = $("hazirBaslat");
-  if (idle(go)) { go.textContent = s.calisiyor ? "● Çeviri çalışıyor" : "Çeviriyi başlat"; go.disabled = stopped || s.calisiyor; }
+  const go = $("hazirBaslat"), on = s.calisiyor && s.durum !== "durduruluyor";
+  if (idle(go)) { go.textContent = on ? "● Çeviri açık" : "Çeviriyi başlat"; go.disabled = stopped || on; }
 }
 
 function renderFound(chosen) {
@@ -1041,11 +1364,22 @@ function renderFound(chosen) {
   });
 }
 
-/** The pairing buttons stay shut until the person confirms a new, separate account. */
+/** The step 3 lock as the TV last said it: why the Sony login cannot be done yet, or "" when it can. */
+function lockOf(step) {
+  const k = state && state.kurulum;
+  return k && !k.adimlar[step - 1] ? (k.kilitler && k.kilitler[step - 1]) || "" : "";
+}
+
+/**
+ * Step 1's button waits for the person to confirm a new, separate account; step 3's login waits for steps 1 and 2
+ * (the TV's lock), step 5's pairing for step 3.
+ */
 function gate() {
-  const ok = $("ayriHesap").checked && !stopped;
-  $("hesapDugmeler").classList.toggle("kilitli", !ok);
-  $("kilitNot").hidden = ok;
+  const consent = ($("ayriHesap").checked || !!(state && state.kurulum && state.kurulum.adimlar[0])) && !stopped;
+  $("hesapDugmeler").classList.toggle("kilitli", !consent);
+  $("kilitNot").hidden = consent;
+  setIdle("yeniHesapBtn", !consent);
+  const ok = !lockOf(3) && !stopped;
   const link = $("psnGiris");
   link.setAttribute("href", ok && state && state.girisAdresi ? state.girisAdresi : "#");
   link.setAttribute("aria-disabled", ok ? "false" : "true");
@@ -1054,17 +1388,29 @@ function gate() {
   $("psnKimlik").disabled = !ok;
   setIdle("psnBagla", !ok);
   setIdle("kimlikKaydet", !ok);
+  const pairOk = !lockOf(5) && !stopped;
+  $("ps5Pin").disabled = !pairOk;
+  setIdle("eslestir", !pairOk);
 }
 
-function flashConsent() {
-  const box = $("onayEtiket");
+function flash(box) {
   box.classList.remove("uyar");
   void box.offsetWidth;
   box.classList.add("uyar");
   box.scrollIntoView({ behavior: "smooth", block: "center" });
 }
+function flashConsent() { flash($("onayEtiket")); }
 
-let lost = false;
+// The TV's state every 3 seconds, every second while the switch is moving; slower while the TV cannot be reached.
+let lost = false, pollTimer = 0;
+function later(ms) { clearTimeout(pollTimer); pollTimer = setTimeout(poll, ms); }
+async function poll() {
+  if (stopped) return;
+  if (!document.hidden) await refreshState();
+  if (stopped) return;
+  const moving = state && (state.durum === "baslatiliyor" || state.durum === "durduruluyor");
+  later(lost ? 10000 : moving ? 1000 : 3000);
+}
 async function refreshState() {
   if (stopped || busy) return;
   try {
@@ -1072,11 +1418,21 @@ async function refreshState() {
     if (lost) { lost = false; status("Bağlı"); }
     if (!busy) renderState(s);
   } catch (e) {
-    if (!stopped && !lost) { lost = true; status("TV'ye ulaşılamıyor. Telefon evdeki Wi-Fi'da mı?", true); }
+    if (stopped) return;
+    lost = true;
+    status(UNREACHABLE, true);
+    const btn = $("anahtar");
+    if (!btn.classList.contains("calisiyor")) {
+      btn.disabled = true;
+      btn.classList.remove("bekle");
+      $("anahtarYazi").textContent = "TV'ye ulaşılamadı";
+      $("ceviriDurum").textContent = "Sayfa TV'ye her 10 saniyede bir yeniden bakıyor. TV'de uygulama kapandıysa aç ve QR'ı yeniden okut.";
+    }
   }
 }
+document.addEventListener("visibilitychange", () => { if (!document.hidden && !stopped) later(0); });
 
-/** A setup or translation button: its feedback, then the new state from the TV. */
+/** A setup button: its feedback, then the new state from the TV. */
 async function control(btn, path, body, busyText, doneText, seconds) {
   busy++;
   try {
@@ -1087,7 +1443,7 @@ async function control(btn, path, body, busyText, doneText, seconds) {
 }
 
 function chooseAddress(btn, address) {
-  return control(btn, "/api/ps5/kurulum", { adres: address }, "Kaydediliyor…", "PS5 seçildi: " + address + ". Şimdi 4. adım.");
+  return control(btn, "/api/ps5/kurulum", { adres: address }, "Kaydediliyor…", "PS5 seçildi: " + address + ". Şimdi 5. adım: eşleştir.");
 }
 
 document.querySelectorAll(".adim-bas").forEach((b) => b.addEventListener("click", () => {
@@ -1096,19 +1452,46 @@ document.querySelectorAll(".adim-bas").forEach((b) => b.addEventListener("click"
   li.classList.toggle("acik", open);
   b.setAttribute("aria-expanded", open ? "true" : "false");
 }));
+// A tap on a locked part of a step shakes the note that says why it is locked.
+for (const i of [3, 5]) {
+  $("is" + i).addEventListener("click", (e) => {
+    if (!$("is" + i).classList.contains("kilitli")) return;
+    e.preventDefault();
+    flash($("kilit" + i));
+  });
+}
 
-$("baslat").addEventListener("click", () => control($("baslat"), "/api/ceviri", { islem: "baslat" }, "Başlatılıyor…", "Çeviri başlatıldı; PS5'e bağlanıyor."));
+$("anahtar").addEventListener("click", toggle);
 $("hazirBaslat").addEventListener("click", () => control($("hazirBaslat"), "/api/ceviri", { islem: "baslat" }, "Başlatılıyor…",
-  "Çeviri başlatıldı. TV'yi PS5'in girişine al; altyazılı bir sahnede birkaç saniye içinde Türkçesi çıkar."));
-$("durdur").addEventListener("click", () => control($("durdur"), "/api/ceviri", { islem: "durdur" }, "Durduruluyor…", "Çeviri durduruluyor."));
+  "Çeviri açılıyor. TV'yi PS5'in girişine al; altyazılı bir sahnede birkaç saniye içinde Türkçesi çıkar.").then(() => later(1000)));
 $("duraklat").addEventListener("click", () => {
   const paused = state && state.duraklatildi;
   control($("duraklat"), "/api/ceviri", { islem: paused ? "devam" : "duraklat" }, paused ? "Devam ediliyor…" : "Duraklatılıyor…", paused ? "Çeviri devam ediyor." : "Duraklatıldı.");
 });
 $("uyandir").addEventListener("click", () => control($("uyandir"), "/api/ps5/uyandir", {}, "Gönderiliyor…", "Uyandırma gönderildi; PS5 birkaç saniyede açılır."));
 
-$("yaptim").addEventListener("click", () => control($("yaptim"), "/api/ps5/kurulum", { uzaktanOynatma: true }, "Kaydediliyor…", "1. adım tamam."));
-$("yaptimGeri").addEventListener("click", () => control($("yaptimGeri"), "/api/ps5/kurulum", { uzaktanOynatma: false }, "Kaydediliyor…", "1. adım yeniden açıldı."));
+$("yeniHesapBtn").addEventListener("click", () => control($("yeniHesapBtn"), "/api/ps5/kurulum", { yeniHesap: true }, "Kaydediliyor…",
+  "1. adım tamam. Şimdi 2. adım: yeni hesapta Uzaktan Oynama."));
+$("yeniHesapGeri").addEventListener("click", () => control($("yeniHesapGeri"), "/api/ps5/kurulum", { yeniHesap: false }, "Kaydediliyor…", "1. adım yeniden açıldı."));
+$("uzaktanBtn").addEventListener("click", () => control($("uzaktanBtn"), "/api/ps5/kurulum", { uzaktanOynama: true }, "Kaydediliyor…",
+  "2. adım tamam. Şimdi 3. adım: yeni hesabı uygulamaya tanıt."));
+$("uzaktanGeri").addEventListener("click", () => control($("uzaktanGeri"), "/api/ps5/kurulum", { uzaktanOynama: false }, "Kaydediliyor…", "2. adım yeniden açıldı."));
+$("bastan").addEventListener("click", () => {
+  if (state && state.calisiyor && !state.deneme) return tell(resultFor($("bastan")), false, "Önce en üstteki anahtarla çeviriyi kapat, sonra kurulumu baştan başlat.");
+  if (!confirm("Kurulum baştan başlasın mı? TV'deki hesap bilgisi ve PS5 eşleşmesi silinir; 5 adımı yeniden yaparsın. PS5'teki yeni hesabın silinmez.")) return;
+  control($("bastan"), "/api/ps5/kurulum", { bastan: true }, "Siliniyor…", "Kurulum baştan başladı. 1. adımdan devam et.").then((s) => {
+    if (!s) return;
+    try { sessionStorage.removeItem("ayriHesap"); } catch (e) {}
+    $("ayriHesap").checked = false;
+    found = [];
+    foundKey = "";
+    forced.clear();
+    shownStep = 0;
+    renderState(state);
+    gate();
+    $("adim1").scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+});
 
 try { $("ayriHesap").checked = sessionStorage.getItem("ayriHesap") === "1"; } catch (e) {}
 $("ayriHesap").addEventListener("change", () => {
@@ -1120,29 +1503,29 @@ $("hesapDugmeler").addEventListener("click", (e) => {
   if ($("hesapDugmeler").classList.contains("kilitli")) { e.preventDefault(); flashConsent(); }
 });
 $("psnGiris").addEventListener("click", (e) => {
-  if (!$("ayriHesap").checked) { e.preventDefault(); flashConsent(); return; }
+  if (lockOf(3)) { e.preventDefault(); flash($("kilit3")); return; }
   if ($("psnGiris").getAttribute("href") === "#") {
     e.preventDefault();
     return tell(resultFor($("psnGiris")), false, "Sayfa TV'den henüz bilgi almadı. Birkaç saniye bekleyip tekrar bas; olmazsa sayfayı yenile.");
   }
-  tell(resultFor($("psnGiris")), "bilgi", "Sony'nin giriş sayfası yeni sekmede açıldı. Yeni hesabınla gir, sonra adres çubuğundaki adresin tamamını kopyalayıp bu sekmeye dön.");
+  tell(resultFor($("psnGiris")), "bilgi", "Sony'nin giriş sayfası yeni sekmede açıldı. YENİ hesabınla gir, sonra adres çubuğundaki adresin tamamını kopyalayıp bu sekmeye dön.");
 });
 $("psnBagla").addEventListener("click", () => {
   const btn = $("psnBagla"), text = $("psnAdres").value.trim();
   if (!text) return tell(resultFor(btn), false, "Kutu boş. Sony'deki girişten sonra açılan sayfanın adresini kopyalayıp kutuya yapıştır.");
   if (text.indexOf("code=") < 0) return tell(resultFor(btn), false, "Yapıştırdığın adreste \"code=\" yok. Girişten sonra açılan sayfanın adres çubuğundaki adresin tamamını kopyala.");
-  control(btn, "/api/ps5/psn", { adres: text }, "Sony'den bilgi alınıyor…", "Yeni hesap bağlandı. Şimdi 3. adım: PS5'i bul.", 40)
+  control(btn, "/api/ps5/psn", { adres: text }, "Sony'den bilgi alınıyor…", "Yeni hesap uygulamaya tanıtıldı. Şimdi 4. adım: PS5'i bul.", 40)
     .then((s) => { if (s) $("psnAdres").value = ""; });
 });
 $("kimlikKaydet").addEventListener("click", () => {
   const btn = $("kimlikKaydet"), id = $("psnKimlik").value.trim();
   if (!id) return tell(resultFor(btn), false, "Hesap kimliğini yaz (12 karakter, ör. AbCdEfGhIjk=).");
-  control(btn, "/api/ps5/hesap", { kimlik: id }, "Kaydediliyor…", "Hesap kimliği kaydedildi.").then((s) => { if (s) $("psnKimlik").value = ""; });
+  control(btn, "/api/ps5/hesap", { kimlik: id }, "Kaydediliyor…", "Hesap kimliği kaydedildi. Şimdi 4. adım: PS5'i bul.").then((s) => { if (s) $("psnKimlik").value = ""; });
 });
 $("hesapDegistir").addEventListener("click", () => {
   const paired = state && state.ps5.eslesti;
-  if (!confirm("Bağlı hesap TV'den silinsin mi?" + (paired ? " PS5 eşleşmesi de silinir; 4. adımı yeniden yapman gerekir." : "") + " Sonra yeni hesabı bağlarsın.")) return;
-  control($("hesapDegistir"), "/api/ps5/unut", {}, "Siliniyor…", "Eski hesap TV'den silindi. Şimdi yeni hesabı bağla.");
+  if (!confirm("Tanıtılan hesap TV'den silinsin mi?" + (paired ? " PS5 eşleşmesi de silinir; 5. adımı yeniden yapman gerekir." : "") + " Sonra yeni hesabı yeniden tanıtırsın.")) return;
+  control($("hesapDegistir"), "/api/ps5/unut", {}, "Siliniyor…", "Eski hesap TV'den silindi. Şimdi yeni hesabı tanıt.");
 });
 
 $("ps5Bul").addEventListener("click", () => {
@@ -1155,7 +1538,7 @@ $("ps5Bul").addEventListener("click", () => {
     if (!found.length) { $("elle").open = true; throw new Error(NOT_FOUND); }
     return found;
   }, "Aranıyor… (en çok 15 saniye)", (list) => list.length === 1
-    ? "PS5 bulundu ve seçildi: " + (list[0].ad || "PS5") + " (" + list[0].adres + "). Şimdi 4. adım." +
+    ? "PS5 bulundu ve seçildi: " + (list[0].ad || "PS5") + " (" + list[0].adres + "). Şimdi 5. adım: eşleştir." +
       (list[0].uyanik ? "" : " PS5 dinlenme modunda; kodu almak için kumandadaki PS tuşuyla aç.")
     : list.length + " PS5 bulundu. Aşağıdan kendi PS5'ine dokun.").then(() => { busy--; });
 });
@@ -1208,20 +1591,20 @@ $("ps5Pin").addEventListener("input", (e) => {
 $("ps5Pin").addEventListener("keydown", (e) => { if (e.key === "Enter") $("eslestir").click(); });
 $("eslestir").addEventListener("click", () => {
   const btn = $("eslestir"), ip = state && state.kurulum ? state.kurulum.secilenAdres : "", pin = keepDigits($("ps5Pin").value);
-  if (!ip) return tell(resultFor(btn), false, "Önce 3. adımda PS5'i bul ya da adresini yaz.");
+  if (lockOf(5)) return flash($("kilit5"));
+  if (!ip) return tell(resultFor(btn), false, "Önce 4. adımda PS5'i bul ya da adresini yaz.");
   if (pin.length !== 8) return tell(resultFor(btn), false, "PS5'in gösterdiği kod 8 rakamdır; şu an " + pin.length + " rakam yazılı.");
   control(btn, "/api/ps5/eslestir", { ip: ip, pin: pin }, "Eşleştiriliyor… (en çok 1 dakika)", "PS5 eşleşti. Aşağıdaki \"Hazır\" bölümüne geç.", 60)
     .then((s) => { if (s) { $("ps5Pin").value = ""; $("pinSay").textContent = "Yazılan rakam: 0 / 8"; } });
 });
 $("unut").addEventListener("click", () => {
   if (confirm("PSN hesap numarası ve PlayStation eşleşmesi TV'den silinsin mi? Sonra yeniden eşleştirmen gerekir.")) {
-    control($("unut"), "/api/ps5/unut", {}, "Siliniyor…", "Silindi. PlayStation'da Uzaktan Oynatma → Bağlı Cihazlar'dan TV'yi de kaldırabilirsin.");
+    control($("unut"), "/api/ps5/unut", {}, "Siliniyor…", "Silindi. PS5'te yeni hesabın Uzaktan Oynama ayarlarından TV'yi de kaldırabilirsin.");
   }
 });
 
 gate();
-refreshState();
-setInterval(() => { if (!document.hidden) refreshState(); }, 3000);
+poll();
 
 load().then(refreshPicture);
 call("/api/paket").then(renderPacks).catch(() => {});

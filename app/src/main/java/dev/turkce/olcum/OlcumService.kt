@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.graphics.Bitmap
@@ -35,38 +36,66 @@ private const val CHANNEL = "ceviri"
 private const val NOTIFICATION_ID = 1
 private const val PRODUCT_STAGE = "ps5boru"
 
+private const val READY_TITLE = "Tv Türkçe Altyazı hazır: telefondaki panelden açıp kapatabilirsin"
+/** How long a start asked of Android counts as the service being there, before Android has created it. */
+private const val STARTING_MS = 10_000L
+
 /**
- * The translation service: holds the PS5 Remote Play link and draws the Turkish subtitles while the game's HDMI
- * input or the home screen is in front. The app starts it with [Translation.start].
+ * The app's service: in front of Android from the moment the TV screen opens it, it holds the phone panel's server
+ * ([AyarSunucusu]) and, while the translation is on ([Translation.start], a thread in this process), the PS5 Remote
+ * Play link and the Turkish subtitles over the game. Android lets an app start such a service only while its screen
+ * is in front, so the TV starts it once ([ready]) and the phone turns the translation on and off inside it, even
+ * while the game holds the screen. With the translation off and no panel request for hours, the panel's server
+ * stops it ([AyarSunucusu]).
  *
  * Debug builds only (the service is exported there) also take the measurement stages over adb:
  * am start-foreground-service -n dev.turkcetv.tv/dev.turkce.olcum.OlcumService --es stage decode|ocr|mt|pipeline --ei seconds 120
  * PS5 stages: ps5kayit (--es host, --es hesap, --es pin), ps5uyandir, ps5akis, ps5boru (--ei okuma 2 waits for two equal reads;
  * --ez deneme true runs it on the demo clip instead of the PS5)
  * Without the PS5: kututest (--es resim file.png), the info-box path on one 1920x1080 picture
+ * Without a stage the service only gets ready, as when the app opens it.
  */
 class OlcumService : Service() {
+    /** True once this start serves the phone panel; a debug measurement start then leaves the service up after it. */
+    private var hosting = false
+
     override fun onBind(intent: Intent?): IBinder? = null
 
+    override fun onCreate() {
+        super.onCreate()
+        up = true
+        requested = 0L
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // A release build runs only the product flow, whatever the intent says.
-        val stage = if (BuildConfig.DEBUG) intent?.getStringExtra("stage") ?: "decode" else PRODUCT_STAGE
-        // Demo mode: the same flow on the clip inside the app instead of the PS5 (the service is not exported in release).
-        val demo = stage == PRODUCT_STAGE && intent?.getBooleanExtra("deneme", false) == true
-        if (!goForeground(stage, demo)) {
-            if (stage == PRODUCT_STAGE) {
-                Translation.note = "Başlatılamadı"
-                Translation.running.set(false)
-            }
+        // A release build serves only the product flow, whatever the intent says.
+        val stage = if (BuildConfig.DEBUG) intent?.getStringExtra("stage") else null
+        if (!goForeground()) {
+            problem = "TV, uygulamanın arka plan hizmetini başlatmadı. Uygulamayı kapatıp yeniden aç."
+            up = false
+            Translation.stop()
             stopSelf()
             return START_NOT_STICKY
         }
+        problem = null
         val debug = BuildConfig.DEBUG
         val seconds = if (debug) intent?.getIntExtra("seconds", 120) ?: 120 else UNTIL_STOPPED
         val interval = if (debug) intent?.getIntExtra("ocrms", 120) ?: 120 else 120
         val reads = if (debug) intent?.getIntExtra("okuma", 1) ?: 1 else 1
         val threads = if (debug) intent?.getIntExtra("threads", 2) ?: 2 else 2
-        val fromApp = !debug || intent?.getBooleanExtra("uygulama", false) == true
+        if (stage == null || stage == PRODUCT_STAGE) {
+            hosting = true
+            runCatching { AyarSunucusu.start(this) }.onFailure { Log.w("TurkceTv", "panel sunucusu acilamadi: $it") }
+            if (stage == PRODUCT_STAGE) {
+                // Debug only: the product flow from adb, in this same service, as the panel would start it.
+                val demo = intent?.getBooleanExtra("deneme", false) == true
+                runCatching { Translation.start(applicationContext, demo, seconds, interval, reads) }
+                    .onFailure { Log.w("Olcum", "ps5boru baslamadi: ${it.message}") }
+            }
+            showState(this)
+            return START_NOT_STICKY
+        }
+        showMeasuring(stage)
         Thread({
             val root = workDir(this)
             val run = Measurements(root)
@@ -82,10 +111,6 @@ class OlcumService : Service() {
                         intent!!.getStringExtra("host")!!, intent.getStringExtra("hesap")!!, intent.getStringExtra("pin")!!)
                     "ps5uyandir" -> ps5.wake()
                     "ps5akis" -> ps5.streamStage(seconds)
-                    PRODUCT_STAGE -> translate(fromApp, demo, run::log) {
-                        prepareModel()
-                        ps5.pipelineStage(seconds, interval, reads, if (demo) DemoSource(this, run::log) else ps5.ps5Source())
-                    }
                     "kututest" -> ps5.boxStage(intent!!.getStringExtra("resim")!!)
                     "argotest" -> ps5.slangStage(intent!!.getStringExtra("dosya")!!)
                 }
@@ -93,94 +118,120 @@ class OlcumService : Service() {
                 run.log("HATA $stage: ${Log.getStackTraceString(error).take(1500)}")
             }
             run.log("BITTI $stage")
-            // Only this start's work ended; a newer start keeps the service.
-            stopSelf(startId)
+            // Only this start's work ended; a service that also serves the panel stays.
+            if (hosting) showState(this) else stopSelf(startId)
         }, "olcum").start()
         return START_NOT_STICKY
+    }
+
+    override fun onDestroy() {
+        up = false
+        // Android ended the service, or the panel's server let it go after hours unused: nothing may run on without
+        // it. When the app has just asked for a new one, that one takes the translation and the panel over.
+        if (!alive) {
+            Translation.stop()
+            AyarSunucusu.stopNow()
+        }
+        super.onDestroy()
     }
 
     /**
      * The lasting notification Android asks of a foreground service, with the PS5 link as its type (Android 10+
      * takes the type here; Android 14+ requires it). False when Android refused, e.g. started from the background.
      */
-    private fun goForeground(stage: String, demo: Boolean): Boolean {
-        val manager = getSystemService(NotificationManager::class.java)
-        manager.createNotificationChannel(NotificationChannel(CHANNEL, "Tv Türkçe Altyazı çeviri", NotificationManager.IMPORTANCE_LOW))
-        val open = PendingIntent.getActivity(this, 0, Intent(this, AyarActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
-        val title = when {
-            demo -> "Tv Türkçe Altyazı deneme modu açık"
-            stage == PRODUCT_STAGE -> "Tv Türkçe Altyazı çeviri açık"
-            else -> "Tv Türkçe Altyazı ölçüm: $stage"
+    private fun goForeground(): Boolean = try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(NOTIFICATION_ID, notification(this, title()), ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE)
+        } else {
+            startForeground(NOTIFICATION_ID, notification(this, title()))
         }
-        val notification = Notification.Builder(this, CHANNEL)
-            .setContentTitle(title)
-            .setSmallIcon(android.R.drawable.ic_menu_info_details)
-            .setContentIntent(open)
-            .setOngoing(true)
-            .build()
-        return try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE)
-            } else {
-                startForeground(NOTIFICATION_ID, notification)
-            }
-            true
-        } catch (error: RuntimeException) {
-            Log.w("TurkceTv", "on plan servisi baslatilamadi: $error")
-            false
-        }
+        true
+    } catch (error: RuntimeException) {
+        Log.w("TurkceTv", "on plan servisi baslatilamadi: $error")
+        false
     }
 
-    /**
-     * The model comes out of the APK on first use, here on the service's own thread rather than on the screen's or
-     * the phone page's; the TV and the phone say so meanwhile.
-     */
-    private fun prepareModel() {
-        if (FirstRun.modelReady(this)) return
-        Translation.note = "Çeviri modeli hazırlanıyor"
-        try {
-            FirstRun.installModel(this)
-        } catch (error: Exception) {
-            Translation.note = MODEL_FAILED
-            throw IllegalStateException(MODEL_FAILED, error)
-        }
-    }
+    private fun showMeasuring(stage: String) =
+        getSystemService(NotificationManager::class.java).notify(NOTIFICATION_ID, notification(this, "Tv Türkçe Altyazı ölçüm: $stage"))
 
-    /**
-     * One translation at a time, whether the app or adb started it, on the PS5 or in demo mode; the switch shows it
-     * stopped once it ends.
-     */
-    private fun translate(fromApp: Boolean, demo: Boolean, log: (String) -> Unit, work: () -> Unit) {
-        if (!fromApp) {
-            if (!Translation.running.compareAndSet(false, true)) {
-                log("ceviri zaten calisiyor")
-                return
+    companion object {
+        /** True from Android creating the service until it ends it. */
+        @Volatile var up = false
+            private set
+
+        /** When the app last asked Android for the service ([System.currentTimeMillis]); 0 once it is up. */
+        @Volatile private var requested = 0L
+
+        /** Why Android would not keep the service, for the TV screen; null when it did. */
+        @Volatile var problem: String? = null
+            private set
+
+        /** Up, or asked for a moment ago and on its way: a start may go ahead. */
+        val alive: Boolean get() = up || requested != 0L && System.currentTimeMillis() - requested < STARTING_MS
+
+        /**
+         * Brings the service up from the app's screen, the only place Android allows it from (Android 12+ refuses a
+         * start from the background). Null when it is up or on its way; otherwise what to tell the person.
+         */
+        fun ready(context: Context): String? {
+            if (up) return null
+            requested = System.currentTimeMillis()
+            return try {
+                context.startForegroundService(Intent(context, OlcumService::class.java))
+                null
+            } catch (error: IllegalStateException) {
+                requested = 0L
+                Log.w("TurkceTv", "servis baslatilamadi: $error")
+                "TV, uygulamanın arka plan hizmetini başlatmadı. Uygulamayı kapatıp yeniden aç."
+            } catch (error: SecurityException) {
+                requested = 0L
+                Log.w("TurkceTv", "servis baslatilamadi: $error")
+                "TV, uygulamanın arka plan hizmetini başlatmadı. Uygulamayı kapatıp yeniden aç."
             }
-            Translation.stopAsked = false
         }
-        Translation.demo = demo
-        var failure: String? = null
-        try {
-            work()
-        } catch (error: IllegalStateException) {
-            failure = error.message
-            throw error
-        } finally {
-            val stopped = Translation.stopAsked
-            Translation.paused = false
-            Translation.stopAsked = false
-            Translation.note = when {
-                stopped -> "Kapalı"
-                failure == NO_DECODER -> NO_DECODER
-                failure != null && failure == busyMessage(ChiakiGate.PAIRING) -> failure
-                Translation.note.startsWith("PlayStation'a bağlanamadı") -> Translation.note
-                Translation.note == DEMO_FAILED || Translation.note == MODEL_FAILED -> Translation.note
-                else -> "Kapandı"
+
+        /** Lets the service go (the panel's server, after hours unused with the translation off). */
+        fun stop(context: Context) {
+            up = false
+            requested = 0L
+            context.stopService(Intent(context, OlcumService::class.java))
+        }
+
+        /** The notification says what the service is doing now: ready, translating, or in the demo. */
+        fun showState(context: Context) {
+            if (!up) return
+            runCatching {
+                context.getSystemService(NotificationManager::class.java).notify(NOTIFICATION_ID, notification(context, title()))
             }
-            Translation.demo = false
-            Translation.running.set(false)
+        }
+
+        private fun title() = when {
+            Translation.running.get() && Translation.demo -> "Tv Türkçe Altyazı deneme modu açık"
+            Translation.running.get() -> "Tv Türkçe Altyazı çeviri açık"
+            else -> READY_TITLE
+        }
+
+        private fun notification(context: Context, title: String): Notification {
+            val manager = context.getSystemService(NotificationManager::class.java)
+            manager.createNotificationChannel(NotificationChannel(CHANNEL, "Tv Türkçe Altyazı çeviri", NotificationManager.IMPORTANCE_LOW))
+            val open = PendingIntent.getActivity(context, 0, Intent(context, AyarActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
+            return Notification.Builder(context, CHANNEL)
+                .setContentTitle(title)
+                .setSmallIcon(android.R.drawable.ic_menu_info_details)
+                .setContentIntent(open)
+                .setOngoing(true)
+                .build()
         }
     }
+}
+
+/**
+ * A run's log line: logcat always; in debug builds also the results file. A release build writes nothing to disk,
+ * and the lines carrying game text are logged only in debug builds by their callers.
+ */
+internal fun runLog(root: File): (String) -> Unit = { line ->
+    Log.i("Olcum", line)
+    if (BuildConfig.DEBUG) runCatching { File(root, "sonuc.txt").appendText(line + "\n") }
 }
 
 internal const val HARDWARE = "OMX.MTK.VIDEO.DECODER.AVC"

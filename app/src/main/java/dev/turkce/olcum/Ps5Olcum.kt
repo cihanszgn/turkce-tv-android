@@ -72,7 +72,7 @@ internal class Pairing(val registKey: ByteArray, val rpKey: ByteArray, val accou
 /** The PS5's Remote Play stream, through chiaki-ng, as a [VideoSource]. */
 private class Ps5Source(private val pairingFile: File, private val log: (String) -> Unit) : VideoSource {
     override val openingNote = "PlayStation'a bağlanıyor"
-    override val failedNote = "PlayStation'a bağlanamadı: PlayStation açık mı, Uzaktan Oynatma açık mı?"
+    override val failedNote = "PlayStation'a bağlanamadı: PlayStation açık mı, yeni hesapta Uzaktan Oynama etkin mi?"
     override val ended get() = ChiakiBridge.state() == ChiakiBridge.STATE_ENDED
 
     override fun open(): Boolean {
@@ -532,20 +532,30 @@ internal class Ps5Measurements(
         val subtitle = LiveSubtitle(context)
         val tracker = BoxTracker()
         val live = LiveSettings(context)
-        val livePack = LivePack(context, translator, subtitle, log)
+        // The demo plays with its own small pack, on or off by the demo screen's OK button; a game uses the pack the
+        // player chose, read into memory when chosen, and takes a new choice over on its next frame.
+        val demoRun = source is DemoSource
+        val demoPack = if (demoRun) DemoPack.get(context) else GamePack.EMPTY
+        if (!demoRun) ActivePack.reload(context)
+        fun wantedPack() = if (demoRun) (if (Translation.demoPack) demoPack else GamePack.EMPTY) else ActivePack.pack
+        // A pack line gets a ✓ (unless the phone turned it off) and every shown line is counted for the phone panel.
+        fun marked(source: LineSource, turkish: String) =
+            if (source == LineSource.PACK && PackMark.on(context)) PackMark.SIGN + turkish else turkish
         // Which workers finished, once the run has stopped them; null until then.
         var stopped: List<Boolean>? = null
         fun stopWorkers() = stopped ?: stopPools(ocrPool to OCR_STOP_S, boxPool to OCR_STOP_S, translatePool to TRANSLATE_STOP_S)
             .also { stopped = it }
         try {
-            Translation.note = source.openingNote
+            Translation.say(source.openingNote)
             if (!source.open()) {
-                Translation.note = source.failedNote
+                Translation.say(source.failedNote)
                 return
             }
-            Translation.note = "Çeviri açık"
+            Translation.say("Çeviri açık", Phase.ON)
             var wasPaused = false
             val states = HashMap<ReadArea, ReadState>()
+            // Set when the pack changes: the boxes on screen are translated again with it.
+            val repack = AtomicBoolean(false)
             var lastCopy = 0L
             var lastScan = 0L
             var readTurn = 0
@@ -556,9 +566,21 @@ internal class Ps5Measurements(
                 if (Translation.paused != wasPaused) {
                     wasPaused = Translation.paused
                     if (wasPaused) subtitle.hideAll()
-                    Translation.note = if (wasPaused) "Duraklatıldı" else "Çeviri açık"
+                    Translation.say(if (wasPaused) "Duraklatıldı" else "Çeviri açık")
                 }
                 if (wasPaused) return@run
+                val wanted = wantedPack()
+                if (translator.pack !== wanted) {
+                    translator.pack = wanted
+                    // The lines on screen are read again with the new pack at once, not when the next line comes.
+                    states.values.forEach { it.lastSent = "" }
+                    repack.set(true)
+                    if (BuildConfig.DEBUG) log("  oyun paketi: ${wanted.info.game.ifEmpty { "yok" }}, ${wanted.size} satir")
+                    // The translators are thanked on screen each time their pack starts working.
+                    if (!demoRun && wanted.size > 0) {
+                        subtitle.show(0, "Türkçe çeviri: ${wanted.info.credit.ifEmpty { "çevirmenler" }} — emeğiniz için teşekkürler!")
+                    }
+                }
                 val now = System.nanoTime()
                 val skipIntro = live.settings.skipIntro
                 val subtitleAreas = live.settings.subtitleAreas
@@ -593,12 +615,17 @@ internal class Ps5Measurements(
                                 translatePool.execute {
                                     try {
                                         val translating = System.nanoTime()
-                                        val turkish = translator.translate(text)
+                                        val line = translator.translateWithSource(text)
+                                        val turkish = line.text
                                         val done = System.nanoTime()
                                         translateTimes.add((done - translating) / 1_000_000)
                                         // What was on screen stays out of the release log.
-                                        if (BuildConfig.DEBUG) log("  ${(done - seen) / 1_000_000} ms [${area.name}]: $text => $turkish")
-                                        if (!Translation.paused && (translator.knows(text) || !ScreenText.barelyChanged(text, turkish))) subtitle.show(slot, turkish)
+                                        if (BuildConfig.DEBUG) log("  ${(done - seen) / 1_000_000} ms [${area.name}] ${line.source.key}: $text => $turkish")
+                                        if (!Translation.paused && (line.source.human || translator.knows(text) ||
+                                                !ScreenText.barelyChanged(text, turkish))) {
+                                            subtitle.show(slot, marked(line.source, turkish))
+                                            LineStats.add(line.source, turkish)
+                                        }
                                     } catch (error: Exception) {
                                         if (BuildConfig.DEBUG) log("  ceviri hatasi: $error")
                                     }
@@ -623,12 +650,21 @@ internal class Ps5Measurements(
                             val found = infoBlocks(boxRecognizer, lumaBitmap(part, area.width, area.height), area.block, translator, skipIntro)
                             boxTimes.add((System.nanoTime() - begin) / 1_000_000)
                             val boxes = tracker.update(found, area.block)
-                            for (box in boxes.filter { it.turkish == null }) {
-                                box.turkish = translatePool.submit(Callable { translator.translate(box.block.text) }).get()
-                                if (BuildConfig.DEBUG) log("  kutu ${box.block.left},${box.block.top}: ${box.block.text} => ${box.turkish}")
+                            if (repack.getAndSet(false)) boxes.forEach { it.turkish = null }
+                            val fresh = boxes.filter { it.turkish == null }
+                            for (box in fresh) {
+                                val line = translatePool.submit(Callable { translator.translateWithSource(box.block.text) }).get()
+                                box.turkish = line.text
+                                box.source = line.source
+                                if (BuildConfig.DEBUG) log("  kutu ${box.block.left},${box.block.top} ${line.source.key}: ${box.block.text} => ${box.turkish}")
                             }
-                            val readable = boxes.filter { translator.knows(it.block.text) || !ScreenText.barelyChanged(it.block.text, it.turkish!!) }
-                            if (!Translation.paused) subtitle.showBoxes(readable.map { it.block to it.turkish!! })
+                            val readable = boxes.filter {
+                                it.source.human || translator.knows(it.block.text) || !ScreenText.barelyChanged(it.block.text, it.turkish!!)
+                            }
+                            if (!Translation.paused) {
+                                subtitle.showBoxes(readable.map { it.block to marked(it.source, it.turkish!!) })
+                                readable.filter { it in fresh }.forEach { LineStats.add(it.source, it.turkish!!) }
+                            }
                         } catch (error: Exception) {
                             if (BuildConfig.DEBUG) log("  kutu hatasi: $error")
                         } finally {
@@ -651,7 +687,6 @@ internal class Ps5Measurements(
             val (ocrDone, boxDone, translateDone) = stopWorkers()
             subtitle.close()
             live.close()
-            livePack.close()
             source.close()
             if (translateDone) translator.close() else leftOpen("ceviri motoru")
             if (ocrDone) recognizer.close() else leftOpen("altyazi okuyucu")
@@ -697,7 +732,8 @@ internal class Ps5Measurements(
 /** What one subtitle area read last, so each area confirms and repeats on its own. */
 private class ReadState {
     var lastRead = ""
-    var lastSent = ""
+    /** Written by the reader and, when the pack changes, by the frame loop. */
+    @Volatile var lastSent = ""
     var firstSeen = 0L
 }
 
@@ -710,39 +746,6 @@ private class LiveSettings(context: android.content.Context) {
 
     init {
         prefs.registerOnSharedPreferenceChangeListener(changed)
-    }
-
-    fun close() = prefs.unregisterOnSharedPreferenceChangeListener(changed)
-}
-
-/** Loads the chosen game pack into the translator, and again whenever the phone picks another one mid-game. */
-private class LivePack(
-    private val context: android.content.Context,
-    private val translator: GameTranslator,
-    private val subtitle: LiveSubtitle,
-    private val log: (String) -> Unit,
-) {
-    private val prefs = SettingsStore.prefs(context)
-    private val changed = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-        if (key == PackStore.ACTIVE_KEY) load()
-    }
-
-    init {
-        load()
-        prefs.registerOnSharedPreferenceChangeListener(changed)
-    }
-
-    /** A big pack takes a moment to index, so it loads beside the game and takes over when ready. */
-    private fun load() {
-        val id = PackStore.active(prefs)
-        kotlin.concurrent.thread(isDaemon = true, name = "oyun-paketi") {
-            val pack = runCatching { PackStore.load(context, id) }.getOrNull()
-            if (PackStore.active(prefs) != id) return@thread
-            translator.pack = pack ?: GamePack.EMPTY
-            log(if (pack == null) "  oyun paketi yok" else "  oyun paketi: ${pack.info.game}, ${pack.size} satir (${pack.info.credit})")
-            // The translators are thanked on screen each time their pack starts working.
-            if (pack != null) subtitle.show(0, "Türkçe çeviri: ${pack.info.credit.ifEmpty { "çevirmenler" }} — emeğiniz için teşekkürler!")
-        }
     }
 
     fun close() = prefs.unregisterOnSharedPreferenceChangeListener(changed)

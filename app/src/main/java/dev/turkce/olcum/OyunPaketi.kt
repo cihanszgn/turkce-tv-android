@@ -22,6 +22,12 @@ private const val MEMO_LINES = 512
 private const val MISSING = "\u0000"
 private val TAG = Regex("<[^<>]{1,40}>")
 private val SPACES = Regex("\\s+")
+/** Words that turn a line around; the reader may drop the apostrophe, so "dont" counts as "don't". */
+private val NEGATIONS = setOf(
+    "no", "not", "never", "nothing", "nobody", "none", "nowhere", "neither", "nor", "cannot",
+    "dont", "cant", "wont", "didnt", "doesnt", "isnt", "arent", "wasnt", "werent", "couldnt", "shouldnt", "wouldnt",
+    "havent", "hasnt", "hadnt", "aint", "mustnt", "neednt",
+)
 private const val MAX_UNZIPPED = 120 * 1024 * 1024
 /** Files in a ZIP the TV cannot read are unpacked only to be skipped; this keeps a "ZIP bomb" from running for hours. */
 private const val MAX_SKIPPED = 1024L * 1024 * 1024
@@ -84,6 +90,9 @@ class GamePack(val info: PackInfo, pairs: Map<String, String>) {
     private val exact: Map<String, String>
     private val index: Map<String, IntArray>
 
+    /** Every word the pack's English lines use: a read word that is one of these is a real word, not a misread. */
+    private val vocabulary: Set<String>
+
     init {
         val clean = LinkedHashMap<String, String>()
         pairs.forEach { (english, turkish) ->
@@ -97,6 +106,7 @@ class GamePack(val info: PackInfo, pairs: Map<String, String>) {
         val words = HashMap<String, MutableList<Int>>()
         keys.forEachIndexed { i, key -> words(key).forEach { words.getOrPut(it) { ArrayList() }.add(i) } }
         index = words.mapValues { it.value.toIntArray() }
+        vocabulary = keys.flatMapTo(HashSet()) { it.split(' ') }
     }
 
     val size get() = keys.size
@@ -123,9 +133,14 @@ class GamePack(val info: PackInfo, pairs: Map<String, String>) {
             .forEach { list -> list.forEach(candidates::add) }
         var best = -1
         var bestScore = FUZZY_MIN_SCORE
+        val turnedAround = negations(key)
         for (i in candidates) {
             val other = keys[i]
             if (abs(other.length - key.length) > key.length * FUZZY_LENGTH_SLACK) continue
+            // "You will not need it" is a few letters from "You will need it" but says the opposite: never the same line.
+            if (negations(other) != turnedAround) continue
+            // "The bridge is open" is 89% "The bridge is closed": close in letters, a different sentence. Only a misread passes.
+            if (!misreadOnly(key, other, vocabulary::contains)) continue
             val longest = max(key.length, other.length)
             val limit = (longest * (1 - bestScore)).toInt()
             val distance = distance(key, other, limit) ?: continue
@@ -140,8 +155,35 @@ class GamePack(val info: PackInfo, pairs: Map<String, String>) {
 
     private fun words(key: String) = key.split(' ').filter { it.length >= 3 }.distinct()
 
+    private fun negations(key: String) = key.split(' ').count { it in NEGATIONS || it.endsWith("n't") }
+
     companion object {
         val EMPTY = GamePack(PackInfo("", "", "", "", "", 0), emptyMap())
+
+        /**
+         * True when [read] differs from the pack line [known] only the way the screen reader errs: a letter inside a
+         * word, or a lost space. A word that differs and is itself a real word ([isWord]: "open" for "closed", "on"
+         * for "in") makes it a different sentence, however alike the two lines look letter by letter.
+         */
+        fun misreadOnly(read: String, known: String, isWord: (String) -> Boolean = { false }): Boolean {
+            val x = read.split(' ')
+            val y = known.split(' ')
+            if (x.size != y.size) return distance(read.replace(" ", ""), known.replace(" ", ""), 2) != null
+            return x.indices.all { i ->
+                val one = x[i]
+                val two = y[i]
+                when {
+                    one == two || lookAlike(one) == lookAlike(two) -> true
+                    isWord(one) -> false
+                    else -> distance(one, two, if (max(one.length, two.length) >= 8) 2 else 1) != null
+                }
+            }
+        }
+
+        /** Letters the reader mixes up, folded to one: l, 1 and | read as i; 0 as o; 5 as s. */
+        private fun lookAlike(word: String) = buildString(word.length) {
+            word.forEach { append(when (it) { 'l', '1', '|' -> 'i'; '0' -> 'o'; '5' -> 's'; else -> it }) }
+        }
 
         /** Edit distance, or null as soon as it must exceed [limit]. */
         fun distance(a: String, b: String, limit: Int): Int? {
@@ -226,7 +268,7 @@ object PackFormat {
         return pairs
     }
 
-    private fun isZip(bytes: ByteArray) = bytes.size > 4 && bytes[0] == 'P'.code.toByte() && bytes[1] == 'K'.code.toByte()
+    fun isZip(bytes: ByteArray) = bytes.size > 4 && bytes[0] == 'P'.code.toByte() && bytes[1] == 'K'.code.toByte()
 
     /** Whether a file inside a ZIP may hold a translation, judged by its name. */
     fun readable(path: String) = READABLE.any { path.lowercase().endsWith(it) }
@@ -432,6 +474,14 @@ internal object PackStore {
         context: Context, fileName: String, bytes: ByteArray, game: String, credit: String, source: String, license: String,
         donate: String = "",
     ): PackInfo {
+        // Each refusal says what was wrong with the file, so the player knows whether to pick another file or another game.
+        require(bytes.any { it.toInt() !in 0..32 }) { "Dosya boş." }
+        val extension = fileName.substringAfterLast('/').substringAfterLast('.', "").lowercase()
+        val zip = PackFormat.isZip(bytes)
+        require(zip || extension != "zip") { "ZIP dosyası açılamadı: bozuk ya da yarım inmiş. Dosyayı yeniden indirip tekrar yükle." }
+        require(zip || extension.isEmpty() || PackFormat.readable(fileName)) {
+            "Desteklenmeyen dosya biçimi (.$extension). TV şunları okur: .po, .tsv, .csv, .txt, .rpy ve bunları içeren .zip."
+        }
         val pairs = PackFormat.read(fileName, bytes)
         require(pairs.isNotEmpty()) {
             "Dosyada İngilizce–Türkçe eşleşen satır yok. TV şunları okur: .po, .tsv, İngilizce ve Türkçe sütunlu .csv, " +
